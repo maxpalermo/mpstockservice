@@ -1,0 +1,13 @@
+services:
+  _defaults:
+    public: true
+    autowire: true
+    autoconfigure: true
+
+  MpSoft\MpStockService\Controllers\Admin\ProductStockServiceController:
+    class: MpSoft\MpStockService\Controllers\Admin\ProductStockServiceController
+    public: true
+    arguments:
+      $legacyContext: '@prestashop.adapter.legacy.context'
+    tags:
+      - { name: "controller.service_arguments" }

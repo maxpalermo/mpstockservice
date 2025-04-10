@@ -1,0 +1,31 @@
+mpstockservice_toggle_is_stock_service:
+  path: mpstockservice/{id_product}/toggle-is-stock-service
+  methods: [POST]
+  defaults:
+    _controller: 'MpSoft\MpStockService\Controllers\Admin\ProductStockServiceController::toggleIsStockServiceAction'
+  requirements:
+    id_product: \d+
+
+mpstockservice_set_stock_service:
+  path: mpstockservice/{id_product}/set-stock-service
+  methods: [POST]
+  defaults:
+    _controller: 'MpSoft\MpStockService\Controllers\Admin\ProductStockServiceController::setStockServiceAction'
+  requirements:
+    id_product: \d+
+
+mpstockservice_admin_toggle_stock_service:
+  path: /mpstockservice/{id_product}/toggle-stock-service
+  methods: [POST]
+  defaults:
+    _controller: 'MpSoft\MpStockService\Controllers\Admin\ProductStockServiceController::toggleStockServiceAction'
+  requirements:
+    id_product: \d+
+
+mpstockservice_admin_update_stock_service:
+  path: /mpstockservice/{id_product}/update-stock-service
+  methods: [POST]
+  defaults:
+    _controller: 'MpSoft\MpStockService\Controllers\Admin\ProductStockServiceController::updateStockServiceAction'
+  requirements:
+    id_product: \d+

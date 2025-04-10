@@ -1,0 +1,121 @@
+.file-upload-zone {
+    border: 2px dashed #25b9d7;
+    border-radius: 5px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.file-upload-zone:hover,
+.file-upload-zone.dragover {
+    background-color: #e9f8fc;
+    border-color: #008abd;
+}
+
+.dz-default.dz-message {
+    color: #6c868e;
+}
+
+.selected-file-info {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+#table_stock {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#table_stock th {
+    background-color: #f6f8f9;
+    border-bottom: 2px solid #25b9d7;
+    padding: 10px;
+    font-weight: 600;
+}
+
+#table_stock td {
+    padding: 10px;
+    vertical-align: middle;
+    border-bottom: 1px solid #ddd;
+}
+
+#table_stock tr:hover {
+    background-color: #f5f9fc;
+}
+
+.card {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #e7eaec;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+}
+
+.card-header i {
+    margin-right: 10px;
+    color: #25b9d7;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e7eaec;
+    padding: 15px 20px;
+}
+
+.form-control:focus {
+    border-color: #25b9d7;
+    box-shadow: 0 0 0 0.2rem rgba(37, 185, 215, 0.25);
+}
+
+.fixed-width-sm {
+    width: 100px;
+}
+
+.fixed-width-md {
+    width: 150px;
+}
+
+.fixed-width-lg {
+    width: 200px;
+}
+
+.fixed-width-xl {
+    width: 250px;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.justify-content-center {
+    justify-content: center;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.justify-content-start {
+    justify-content: start;
+}
+
+.justify-content-end {
+    justify-content: end;
+}

@@ -1,0 +1,5 @@
+#nav-sidebar {
+    position: absolute !important;
+    height: auto !important;
+    min-height: 100% !important;
+}

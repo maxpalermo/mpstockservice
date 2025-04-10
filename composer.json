@@ -1,0 +1,44 @@
+{
+    "name": "mpsoft/mpstockservice",
+    "description": "Gestione Stock Service",
+    "authors": [
+        {
+            "name": "Massimiliano Palermo",
+            "email": "maxx.palermo@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1.0",
+        "prestashop/prestashop-webservice-lib": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "MpSoft\\MpStockService\\": "src/",
+            "MpSoft\\MpStockService\\WebServices\\": "vendor/prestashop/"
+        },
+        "classmap": [],
+        "exclude-from-classmap": [],
+        "files": [
+            "vendor/prestashop/prestashop-webservice-lib/PSWebServiceLibrary.php"
+        ]
+    },
+    "config": {
+        "preferred-install": "dist",
+        "prepend-autoloader": false
+    },
+    "type": "prestashop-module",
+    "extra": {
+        "module": {
+            "name": "Gestione stock service",
+            "version": "1.2.0",
+            "author": "Massimiliano Palermo",
+            "author_email": "maxx.palermo@gmail.com",
+            "author_url": "https://www.prestashop.maxpalermo.it",
+            "license": "AFL-3.0",
+            "url": "https://www.prestashop.maxpalermo.it",
+            "readme": "README.md"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

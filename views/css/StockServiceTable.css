@@ -1,0 +1,38 @@
+/* Miglioramento dei colori della tabella per una migliore leggibilità */
+#tableContentStockService table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#tableContentStockService table th {
+    background-color: #25b9d7; /* Blu PrestaShop */
+    color: white;
+    font-weight: bold;
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+#tableContentStockService table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    color: #363a41; /* Colore testo più scuro */
+}
+
+#tableContentStockService table tr:nth-child(even) {
+    background-color: #f8f8f8;
+}
+
+#tableContentStockService table tr:hover {
+    background-color: #e8f4f8;
+}
+
+/* Stili per Select2 */
+.select2-container--default .select2-selection--single {
+    border-color: #bbcdd2;
+    border-radius: 4px;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #25b9d7;
+}

@@ -1,0 +1,366 @@
+/**
+ * Copyright since 2007 PrestaShop SA and Contributors
+ * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License version 3.0
+ * that is bundled with this package in the file LICENSE.md.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/AFL-3.0
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * @author    Massimiliano Palermo <maxx.palermo@gmail.com>
+ * @copyright Since 2016 Massimiliano Palermo
+ * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
+ */
+
+.process-icon-truck:before {
+    content: "\f0d1";
+}
+
+.process-icon-home:before {
+    content: "\f015";
+}
+
+.process-icon-euro:before {
+    content: "\f153";
+}
+
+.process-icon-barcode:before {
+    content: "\f02a";
+}
+
+.process-icon-packages:before {
+    content: "\f187";
+}
+
+.process-icon-times:before {
+    content: "\f00d";
+    color: red;
+}
+
+.process-icon-close:before {
+    content: "\f057";
+}
+
+.process-icon-save:before {
+    content: "\f0c7";
+}
+
+.process-icon-calculator:before {
+    content: "\f1ec";
+}
+
+.process-icon-request:before {
+    content: "\f045";
+}
+
+.process-icon-response:before {
+    content: "\f01c";
+}
+
+.process-icon-bordero:before {
+    content: "\f0f6";
+}
+
+.process-icon-list-alt:before {
+    content: "\f022";
+}
+
+.process-icon-print:before {
+    content: "\f02f";
+}
+
+.process-icon-euro:before {
+    content: "\f153";
+}
+
+.process-icon-barcode:before {
+    content: "\f02a";
+}
+
+.process-icon-packages:before {
+    content: "\f187";
+}
+
+.process-icon-times:before {
+    content: "\f00d";
+    color: red;
+}
+
+.process-icon-address:before {
+    content: "\f2bc";
+    color: #2ece51;
+}
+
+.process-icon-address:hover:before {
+    content: "\f2bc";
+    color: rgb(93, 184, 128);
+}
+
+.process-icon-lock:before {
+    content: "\f023";
+}
+
+.process-icon-unlock:before {
+    content: "\f09c";
+}
+
+.process-icon-search:before {
+    content: "\f002";
+}
+
+.process-icon-no:before {
+    content: "\f00d";
+    color: #A06060;
+}
+
+.process-icon-yes:before {
+    content: "\f00c";
+    color: #60A060;
+}
+
+.icon-AdminMpMassImport:before {
+    content: "\f187";
+    color: #428ab9 !important;
+}
+
+.icon-hand-right:before {
+    content: "\f0a4";
+}
+
+.icon-hand-left:before {
+    content: "\f0a5";
+}
+
+.icon-hand-up:before {
+    content: "\f0a6";
+}
+
+.icon-hand-down:before {
+    content: "\f0a7";
+}
+
+.icon-AdminMpLangImport:before {
+    content: "\f0e6";
+    color: #feffd0;
+}
+
+.icon-flag:before {
+    content: "\f024";
+}
+
+.text-white {
+    color: #fefefe !important;
+}
+
+#maintab-MpModules>ul a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f12e";
+    color: #fefefe;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassImportProducts a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f07a";
+    color: #fefefe;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassImportEan13 a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f02a";
+    color: #f1eaa7 !important;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassImportPrices a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f201";
+    color: #ff764c !important;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassImportAttributes a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f1b3";
+    color: #85b5fc !important;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassImportFeatures a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f1b3";
+    color: #eea3e8 !important;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassImportCombinations a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f1b3";
+    color: #5ce685 !important;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassImportIsacco a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f1c0";
+    color: #ebebeb !important;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassExport a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f093";
+    color: #ff3535 !important;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassUpdateProducts a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f044";
+    color: #fefefe;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpMassUpdateCombinations a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f044";
+    color: #fefefe;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpLangImport a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f1ab";
+    color: #e45252;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpBlockBrtLabel a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f023";
+    color: #e45252;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpOrderFlag a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f0eb";
+    color: #73a7e4;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpCustomerArchive a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f0c6";
+    color: #33b933;
+    margin-right: 4px;
+}
+
+#subtab-AdminMpStockService a:before {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    content: "\f16c";
+    color: #ceb237;
+    margin-right: 4px;
+}
