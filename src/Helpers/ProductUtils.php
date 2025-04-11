@@ -89,6 +89,8 @@ class ProductUtils
             return [];
         }
 
+        $res['date'] = substr($res['date'], 0, 10);
+
         return $res;
     }
 

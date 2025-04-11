@@ -2,6 +2,8 @@
  * File Upload management for Stock Service module
  */
 
+import StockServiceTable from "./StockServiceTable.js";
+
 export default class FileUpload {
     constructor(options = {}) {
         this.options = {
@@ -12,15 +14,17 @@ export default class FileUpload {
             inputBtnId: "input-btn",
             removeFileClass: ".remove-file",
             dzMessageClass: ".dz-message",
-            ajaxController: null,
-            isChecked: false,
+            url: options.url ?? null,
+            isChecked: options.isChecked ?? false,
             translations: {
                 attention: "Attenzione",
                 selectFile: "Seleziona un file prima di caricare.",
                 invalidFormat: "Formato non valido",
                 selectXmlFile: "Per favore seleziona un file XML.",
                 error: "Error",
-                ajaxError: "AJAX ERROR"
+                ajaxError: "AJAX ERROR",
+                success: "Successo",
+                uploadResults: "Risultati dell'upload"
             },
             ...options
         };
@@ -32,6 +36,9 @@ export default class FileUpload {
         this.buttonIcon = "";
 
         this.init();
+
+        console.log("INIT FILEUPLOAD", this.options);
+        console.log("OPTION SENT:", options);
     }
 
     init() {
@@ -129,7 +136,9 @@ export default class FileUpload {
         }
     }
 
-    uploadFile(type, button) {
+    uploadFile(type, e, force = false) {
+        console.log("UPLOAD FILE", type, this.options.url);
+
         const data = new FormData();
         // Obtain the file from an <input type="file"> element
         const file = this.fileInput.files[0];
@@ -147,12 +156,11 @@ export default class FileUpload {
         // Append the file directly to a FormData object
         data.append("fileUpload", file, file.name);
         data.append("ajax", true);
-        data.append("action", type + "StockService");
-        data.append("force_load", this.options.isChecked);
-        data.append("is_stock_service", $("input[name=opt_ss]:checked").val());
+        data.append("action", type);
+        data.append("force_load", force);
 
         $.ajax({
-            url: this.options.ajaxController,
+            url: this.options.url,
             type: "POST",
             dataType: "JSON",
             data: data,
@@ -160,12 +168,65 @@ export default class FileUpload {
             cache: false,
             processData: false,
             beforeSend: () => {
-                this.setButtonIconLoading(button, true);
+                this.setButtonIconLoading(e, true);
             },
             success: (response) => {
-                $("#tableOut .tableOut").html(response.tableOut);
-                $("#tableOut .totStockRows").html(response.totStockRows);
-                $("#tableOut").modal("show");
+                if (response.result) {
+                    // Utilizziamo la nuova classe StockServiceTable per visualizzare i risultati
+                    if (response.list && response.list.length > 0) {
+                        const stockServiceTable = new StockServiceTable(response.list);
+                        const tableHtml = stockServiceTable.render();
+
+                        Swal.fire({
+                            title: this.options.translations.uploadResults,
+                            html: tableHtml,
+                            icon: "success",
+                            width: "80%",
+                            confirmButtonText: "OK",
+                            didOpen: (modalElement) => {
+                                console.log("SweetAlert2 aperto, modifico z-index (con workaround)...");
+
+                                // Ottieni il container principale del modal (questo dovrebbe funzionare)
+                                const container = Swal.getContainer();
+
+                                // --- Workaround per getBackdrop ---
+                                // Seleziona manualmente il backdrop usando il suo selettore CSS
+                                const backdrop = document.querySelector(".swal2-backdrop");
+                                // --- Fine Workaround ---
+
+                                if (container) {
+                                    container.style.zIndex = 15000;
+                                    console.log(`z-index del container impostato a ${container.style.zIndex}`);
+                                } else {
+                                    console.warn("Swal.getContainer() non ha restituito un elemento.");
+                                }
+
+                                // Controlla se il backdrop è stato trovato manualmente
+                                if (backdrop) {
+                                    backdrop.style.zIndex = 14999; // Imposta z-index leggermente inferiore
+                                    console.log(`z-index del backdrop (trovato manualmente) impostato a ${backdrop.style.zIndex}`);
+                                } else {
+                                    // Potrebbe non esserci un backdrop se showBackdrop: false è impostato
+                                    console.warn("Elemento backdrop (.swal2-backdrop) non trovato nel DOM.");
+                                }
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: this.options.translations.success,
+                            text: response.message || "Operazione completata con successo.",
+                            icon: "success",
+                            confirmButtonText: "OK"
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        title: this.options.translations.error,
+                        text: response.message || this.options.translations.ajaxError,
+                        icon: "error",
+                        confirmButtonText: "OK"
+                    });
+                }
             },
             error: (response) => {
                 Swal.fire({
@@ -177,7 +238,7 @@ export default class FileUpload {
                 console.log(response.responseText);
             },
             complete: () => {
-                this.setButtonIconLoading(button, false);
+                this.setButtonIconLoading(e, false);
             }
         });
     }

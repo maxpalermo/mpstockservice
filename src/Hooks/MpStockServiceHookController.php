@@ -21,6 +21,7 @@
  */
 
 namespace MpSoft\MpStockService\Hooks;
+use MpSoft\MpStockService\Helpers\ProductUtils;
 use MpSoft\MpStockService\Helpers\SmartyHelper;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -129,7 +130,7 @@ class MpStockServiceHookController
 
     public function uploadQty($content, $type)
     {
-        $whole = (int) \Tools::getValue('opt_import');
+        $whole = (int) \Tools::getValue('force_upload');
         if ($whole) {
             return [$this->uploadQtyStock($content, $type)];
         }
@@ -322,23 +323,19 @@ class MpStockServiceHookController
 
     public function display($controller = false)
     {
+        $productUtils = new ProductUtils($this->module);
         $id_product = (int) $this->id_product;
         $isStockService = \ModelMpStockService::isStockServiceProduct($id_product);
-        $rows = $this->getRows($isStockService);
-
         $data = [
             'id_product' => $id_product,
-            'ss' => $isStockService,
-            'rows' => $rows,
+            'is_stock_service' => $isStockService,
+            'rows' => $productUtils->getCombinations(new \Product($id_product)),
             'suppliers' => \Supplier::getSuppliers($this->id_lang),
-            'ajax_controller' => $this->ajax_controller,
-            'is_stock_service' => $this->is_stock_service,
-            'combinations' => $this->combinations,
             'base_url' => (\Configuration::get('PS_SSL_ENABLED') ? _PS_BASE_URL_SSL_ : _PS_BASE_URL_) . '/',
             'actionToggleStockService' => $this->getActionUrl('toggle_stock_service', ['id_product' => $id_product], true),
-            // 'actionResetStockQuantities' => $this->getActionUrl('reset_stock_quantities', ['id_product' => $id_product], true),
-            // 'actionUploadQty' => $this->getActionUrl('upload_qty', ['id_product' => $id_product], true),
             'actionUpdateStockService' => $this->getActionUrl('update_stock_service', ['id_product' => $id_product], true),
+            'actionResetStockService' => $this->getActionUrl('reset_stock_service', ['id_product' => $id_product], true),
+            'actionUploadFile' => $this->getActionUrl('upload_file', [], true),
         ];
 
         if ($controller) {
@@ -348,49 +345,6 @@ class MpStockServiceHookController
         }
 
         return $this->smartyHelper->renderTplHook('displayProductExtra', $data);
-    }
-
-    public function getRows($isStockService)
-    {
-        $product = new \Product($this->id_product);
-        $combinations = $product->getAttributeCombinations($this->id_lang);
-        $comb_list = [];
-        foreach ($combinations as $comb) {
-            $comb_list[$comb['id_product_attribute']][] = $comb;
-        }
-        foreach ($comb_list as &$comb) {
-            $name = [];
-            foreach ($comb as $attr) {
-                $name[] = $attr['group_name'] . ': <span class="text-info">' . $attr['attribute_name'] . '</span>';
-            }
-            $name = implode(',', $name);
-            $comb['id_product_attribute'] = $attr['id_product_attribute'];
-            $comb['name'] = $name;
-            $comb['quantity'] = 0;
-            $comb['number'] = '--';
-            $comb['id_supplier'] = 0;
-            $comb['date'] = '';
-
-            if ($isStockService) {
-                $sql = new \DbQuery();
-                $sql->select('quantity')
-                    ->select('id_supplier')
-                    ->select('number')
-                    ->select("DATE_FORMAT(date, '%Y-%m-%d') as date")
-                    ->from($this->table)
-                    ->where('id_product_attribute = ' . (int) $attr['id_product_attribute']);
-                $row = $this->db->getRow($sql);
-                if ($row) {
-                    $comb['quantity'] = (int) $row['quantity'];
-                    $comb['number'] = $row['number'];
-                    $comb['id_supplier'] = $row['id_supplier'];
-                    $comb['date'] = $row['date'];
-                }
-            }
-        }
-        unset($comb);
-
-        return $comb_list;
     }
 
     protected function resetTable()
@@ -434,7 +388,7 @@ class MpStockServiceHookController
 
     protected function updateStock()
     {
-        $isStockService = (int) \Tools::getValue('opt_ss');
+        $isStockService = ((bool) \Tools::getValue('input-is_stock_service', 0));
         $rows = [];
         $quantity = \Tools::getValue('ss_quantity');
         $variation = \Tools::getValue('ss_variation');

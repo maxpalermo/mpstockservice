@@ -12,9 +12,13 @@ export function setButtonIconLoading(button, loading = true) {
     }
 }
 
-export function uploadFile(type, button) {
+export function uploadFile(type, e, force = false) {
     if (fileUploader) {
-        fileUploader.uploadFile(type, button);
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        fileUploader.uploadFile(type, e, force);
     }
 }
 
@@ -39,58 +43,55 @@ export async function applyAll(item) {
     });
 }
 
-export function resetStockQuantities(button) {
-    Swal.fire({
-        title: "Conferma",
-        text: "Azzerare le quantità di stock per il prodotto selezionato?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sì",
-        cancelButtonText: "No"
-    }).then((result) => {
-        if (!result.isConfirmed) {
-            return false;
-        }
-        let data = {
-            ajax: true,
-            action: "resetStockService",
-            id_product: "{$id_product}"
-        };
-        setButtonIconLoading(button, true);
-        $.post("{$ajax_controller}", data, function (response) {
-            if (response.result) {
-                Swal.fire({
-                    title: "{l s='Reset Quantities' mod='mpstockservice'}",
-                    text: "{l s='Operation done.' mod='mpstockservice'}",
-                    icon: "success",
-                    confirmButtonText: "OK"
-                });
-                if ("{isset($controller)}") {
-                    window.location.href = "{$ajax_controller}";
-                }
-            } else {
-                Swal.fire({
-                    title: "{l s='Reset Quantities' mod='mpstockservice'}",
-                    text: "{l s='Error during reset. Retry.' mod='mpstockservice'}",
-                    icon: "error",
-                    confirmButtonText: "OK"
-                });
-            }
-            setButtonIconLoading(button, false);
-        });
-    });
-}
-
-export async function submitStockQuantities(e, actionUpdateStockService) {
-    e.stopPropagation();
+export async function resetStockQuantities(e, action) {
     e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
 
-    const request = await window.swalConfirm("Aggiornare i dati dello Stock Service?");
-    if (!request) {
+    window.swalLoading();
+
+    const response = await fetch(action, {
+        method: "POST"
+    });
+
+    if (!response) {
         return false;
     }
 
-    const tbody = document.querySelector("#table_stock tbody");
+    const result = await response.json();
+    if (result.result) {
+        window.swalSuccess("Aggiornamento completato con successo");
+        resetStockServiceQuantities();
+    } else {
+        window.swalError("Errore durante l'aggiornamento");
+    }
+}
+
+function resetStockServiceQuantities() {
+    const table = document.getElementById("tableStockService");
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach(function (row) {
+        const StockQuantity = row.querySelector("input[name^='ss_quantity']");
+        const StockVariation = row.querySelector("input[name^='ss_variation']");
+        const Supplier = row.querySelector("select[name^='ss_id_supplier']");
+        const Num = row.querySelector("input[name^='ss_number']");
+        const Date = row.querySelector("input[name^='ss_date']");
+
+        StockQuantity.value = "0";
+        StockVariation.value = "0";
+        Supplier.value = "";
+        Num.value = "";
+        Date.value = "";
+
+        Supplier.dispatchEvent(new Event("change"));
+    });
+}
+
+export async function submitStockQuantities(e, action) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const tbody = document.querySelector("#tableStockService tbody");
     const rows = tbody.querySelectorAll("tr");
     const rowsData = [];
     rows.forEach(function (row) {
@@ -116,7 +117,7 @@ export async function submitStockQuantities(e, actionUpdateStockService) {
 
     window.swalLoading();
 
-    const response = await fetch(actionUpdateStockService, {
+    const response = await fetch(action, {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
@@ -131,48 +132,31 @@ export async function submitStockQuantities(e, actionUpdateStockService) {
     const result = await response.json();
     if (result.result) {
         window.swalSuccess("Aggiornamento completato con successo");
+        updateStockServiceQuantities();
     } else {
         window.swalError("Errore durante l'aggiornamento");
     }
 }
 
-export function editEan13() {
-    let table = $("#table-combinations-list");
-    let rows = table.find("tbody tr");
+function updateStockServiceQuantities() {
+    const table = document.getElementById("tableStockService");
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach(function (row) {
+        const StockQuantity = parseInt(row.querySelector("input[name^='ss_quantity']").value);
+        const StockVariation = parseInt(row.querySelector("input[name^='ss_variation']").value);
+        const result = StockQuantity + StockVariation;
 
-    $.each(rows, function () {
-        let a = $(this).find("td a");
-        let id_pa = "";
-        if (a.length > 0) {
-            let match = a.attr("href").match(/id_product_attribute=(\d+)/);
-            if (match) {
-                id_pa = match[1];
-            }
-            let ean13 = $(this).find("td:nth-child(5)").text().trim();
-            let input = $("<input>")
-                .attr("type", "text")
-                .attr("name", "barcode[" + id_pa + "]")
-                .addClass("form-control text-center")
-                .attr("data-id_pa", id_pa)
-                .val(ean13);
-            $(this).find("td:nth-child(5)").html(input);
-        }
+        row.querySelector("input[name^='ss_quantity']").value = result < 0 ? 0 : result;
+        row.querySelector("input[name^='ss_variation']").value = "0";
     });
-    let tfoot = $("<tfoot>").append(
-        $("<tr>").append(
-            $("<td>")
-                .attr("colspan", "7")
-                .addClass("text-right")
-                .append($("<button>").addClass("btn btn-default").attr("id", "submitEditEan13").attr("type", "button").append($("<i>").addClass("process-icon-save")).append($("<span>").text("{l s='Salva EAN13' mod='mpstockservice'}")))
-        )
-    );
-    table.append(tfoot);
 }
 
 // Inizializza il file uploader con le opzioni necessarie
-export function initFileUploader(ajaxControllerUrl, isCheckedValue) {
+export function initFileUploader(action, isCheckedValue) {
+    console.log("initFileUploader ACTION", action);
+
     fileUploader = new FileUpload({
-        ajaxController: ajaxControllerUrl,
+        url: action,
         isChecked: isCheckedValue,
         translations: {
             attention: "Attenzione",
@@ -215,7 +199,7 @@ export function updateEan13(ean13) {
         ean13: ean13
     };
 
-    $.post(ajax_controller, data, function (response) {
+    $.post("", data, function (response) {
         if (response.result) {
             Swal.fire({
                 title: "Operazione completata.",

@@ -29,3 +29,17 @@ mpstockservice_admin_update_stock_service:
     _controller: 'MpSoft\MpStockService\Controllers\Admin\ProductStockServiceController::updateStockServiceAction'
   requirements:
     id_product: \d+
+
+mpstockservice_admin_reset_stock_service:
+  path: /mpstockservice/{id_product}/reset-stock-service
+  methods: [POST]
+  defaults:
+    _controller: 'MpSoft\MpStockService\Controllers\Admin\ProductStockServiceController::resetStockServiceAction'
+  requirements:
+    id_product: \d+
+
+mpstockservice_admin_upload_file:
+  path: /mpstockservice/upload-file
+  methods: [POST]
+  defaults:
+    _controller: 'MpSoft\MpStockService\Controllers\Admin\ProductStockServiceController::uploadFileAction'

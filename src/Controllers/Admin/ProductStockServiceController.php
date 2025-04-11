@@ -23,6 +23,8 @@ namespace MpSoft\MpStockService\Controllers\Admin;
 require_once _PS_MODULE_DIR_ . 'mpstockservice/models/autoload.php';
 
 use MpSoft\MpStockService\Helpers\ProductUtils;
+use MpSoft\MpStockService\Helpers\StockServiceList;
+use MpSoft\MpStockService\Helpers\XmlParser;
 use PrestaShop\PrestaShop\Adapter\LegacyContext;
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use Symfony\Component\HttpFoundation\Response;
@@ -60,13 +62,13 @@ class ProductStockServiceController extends FrameworkBundleAdminController
     /**
      * Toggle is_stock_service status for a product
      * 
-     * @Route("/mpstockservice/{id_product}/toggle-is-checked", name="mpstockservice_toggle_is_checked", methods={"POST"})
+     * @Route("/mpstockservice/{id_product}/toggle-is-stock-service", name="mpstockservice_toggle_is_stock_service", methods={"POST"})
      * 
      * @param int $id_product Product ID
      * 
      * @return Response
      */
-    public function toggleIsCheckedAction($id_product)
+    public function toggleIsStockServiceAction($id_product)
     {
         $result = false;
         // Recupera il record attuale o ne crea uno nuovo
@@ -103,7 +105,7 @@ class ProductStockServiceController extends FrameworkBundleAdminController
     /**
      * Set stock service option for a product
      * 
-     * @Route("/mpstockservice/{id_product}set-stock-service", name="mpstockservice_set_stock_service", methods={"POST"})
+     * @Route("/mpstockservice/{id_product}toggle-stock-service", name="mpstockservice_toggle_stock_service", methods={"POST"})
      * 
      * @param int $id_product Product ID
      * 
@@ -112,6 +114,7 @@ class ProductStockServiceController extends FrameworkBundleAdminController
     public function toggleStockServiceAction($id_product)
     {
         $productUtils = new ProductUtils($this->module);
+        $value = (int) \Tools::getValue('value');
 
         if (!$id_product) {
             return $this->json([
@@ -137,7 +140,7 @@ class ProductStockServiceController extends FrameworkBundleAdminController
         $record->date_upd = date('Y-m-d H:i:s');
 
         if ($exists) {
-            $record->is_stock_service = !$record->is_stock_service;
+            $record->is_stock_service = $value;
             $record->id_employee = (int) $this->legacyContext->getContext()->employee->id;
             $result = $record->update();
         } else {
@@ -152,13 +155,13 @@ class ProductStockServiceController extends FrameworkBundleAdminController
             // Aggiungo tutte le combinazioni del prodotto se non esistono già
             $combinations = $productUtils->getCombinations($product);
             foreach ($combinations as $combination) {
-                $model = new \ModelMpStockService();
-                $model->id = $combination['id_product_attribute'];
+                $model = new \ModelMpStockService($combination['id_product_attribute']);
                 $model->id_product = $product->id;
                 $model->hydrate($combination);
 
-                if (\Validate::isLoadedObject($model)) {
+                if (!\Validate::isLoadedObject($model)) {
                     $model->force_id = true;
+                    $model->id = $combination['id_product_attribute'];
                     $model->add();
                 } else {
                     $model->update();
@@ -181,7 +184,7 @@ class ProductStockServiceController extends FrameworkBundleAdminController
         }
         $combinations = $productUtils->getCombinations($product);
         foreach ($combinations as $combination) {
-            $model = new \ModelMpStockService();
+            $model = new \ModelMpStockService($combination['id_product_attribute']);
             if (\Validate::isLoadedObject($model)) {
                 $model->force_id = true;
                 $model->id = $combination['id_product_attribute'];
@@ -214,6 +217,9 @@ class ProductStockServiceController extends FrameworkBundleAdminController
                 $variation = (int) $row['quantity'];
                 $model->hydrate($row);
                 $model->quantity = $total + $variation;
+                if ($model->quantity < 0) {
+                    $model->quantity = 0;
+                }
                 if (!\Validate::isLoadedObject($model)) {
                     $model->force_id = true;
                     $model->id = $id;
@@ -229,6 +235,86 @@ class ProductStockServiceController extends FrameworkBundleAdminController
             'message' => 'Opzione Stock Service aggiornata con successo',
             'rows' => $rows,
             'id_product' => $id_product,
+        ]);
+    }
+
+    public function resetStockServiceAction($id_product)
+    {
+        $productUtils = new ProductUtils($this->module);
+        $rows = $productUtils->getCombinations(new \Product($id_product, false, $this->id_lang));
+
+        if ($rows) {
+            foreach ($rows as $row) {
+                $id = (int) $row['id_product_attribute'];
+                if (!$id) {
+                    continue;
+                }
+
+                $model = new \ModelMpStockService($id);
+
+                $model->id_product = $id_product;
+                $model->id_supplier = 0;
+                $model->number = '';
+                $model->date = null;
+                $model->quantity = 0;
+
+                if (!\Validate::isLoadedObject($model)) {
+                    $model->force_id = true;
+                    $model->id = $id;
+                    $model->add(true, true);
+                } else {
+                    $model->update(true);
+                }
+            }
+        }
+
+        return $this->json([
+            'result' => true,
+            'message' => 'Stock Service azzerato',
+            'rows' => $rows,
+            'id_product' => $id_product,
+        ]);
+    }
+
+    public function uploadFileAction()
+    {
+        $file = \Tools::fileAttachment('fileUpload', false);
+        $action = \Tools::getValue('action');
+        $force = (int) \Tools::getValue('force_load');
+        $list = [];
+
+        if ($file['error']) {
+            return $this->json([
+                'result' => false,
+                'message' => 'Errore durante l\'upload del file',
+            ]);
+        }
+        $filePath = $file['tmp_name'];
+
+        try {
+            $xmlParser = new XmlParser($filePath, true);
+            $data = $xmlParser->getAllData();
+            if ($data && $data['rows']) {
+                $stockServiceList = new StockServiceList($data['rows'], $force);
+                $list = $stockServiceList->populate();
+                if ($action === 'load') {
+                    $list = $stockServiceList->load($force);
+                } else {
+                    $list = $stockServiceList->unload($force);
+                }
+            }
+        } catch (\Throwable $th) {
+            return $this->json([
+                'result' => false,
+                'message' => $th->getMessage(),
+            ]);
+        }
+
+        return $this->json([
+            'result' => true,
+            'message' => 'Quantità caricate con successo',
+            'list' => $list,
+            'action' => $action,
         ]);
     }
 }

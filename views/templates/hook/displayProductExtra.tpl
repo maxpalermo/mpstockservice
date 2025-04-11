@@ -33,10 +33,10 @@
                 <div class="form-group">
                     <label class="form-control-label">{l s='È un prodotto del servizio stock?' mod='mpstockservice'}</label>
                     <div class="ps-switch ps-switch-lg">
-                        <input type="radio" name="opt_ss" id="opt_ss_off" value="0" {if !$ss}checked{/if} class="switch_ss">
-                        <label for="opt_ss_off"><i class="material-icons text-danger">close</i></label>
-                        <input type="radio" name="opt_ss" id="opt_ss_on" value="1" {if $ss}checked{/if} class="switch_ss">
-                        <label for="opt_ss_on"><i class="material-icons text-success">check</i></label>
+                        <input type="radio" name="input-is_stock_service" id="input-false-is_stock_service" value="0" {if !$is_stock_service}checked{/if} class="switch_ss">
+                        <label for="input-false-is_stock_service"><i class="material-icons text-danger">close</i></label>
+                        <input type="radio" name="input-is_stock_service" id="input-true-is_stock_service" value="1" {if $is_stock_service}checked{/if} class="switch_ss">
+                        <label for="input-true-is_stock_service"><i class="material-icons text-success">check</i></label>
                         <span class="slide-button"></span>
                     </div>
                 </div>
@@ -52,10 +52,10 @@
                 <div class="form-group">
                     <label class="form-control-label">{l s='Applica servizio stock all\'intero file?' mod='mpstockservice'}</label>
                     <div class="ps-switch ps-switch-lg">
-                        <input type="radio" name="opt_import" id="opt_import_off" value="0" checked class="switch_import">
-                        <label for="opt_import_off"><i class="material-icons text-danger">close</i></label>
-                        <input type="radio" name="opt_import" id="opt_import_on" value="1" class="switch_import">
-                        <label for="opt_import_on"><i class="material-icons text-success">check</i></label>
+                        <input type="radio" name="input-force_upload" id="input-false-force_upload" value="0" checked class="switch_import">
+                        <label for="input-false-force_upload"><i class="material-icons text-danger">close</i></label>
+                        <input type="radio" name="input-force_upload" id="input-true-force_upload" value="1" class="switch_import">
+                        <label for="input-true-force_upload"><i class="material-icons text-success">check</i></label>
                         <span class="slide-button"></span>
                     </div>
                 </div>
@@ -135,7 +135,7 @@
 
 <template id="tableStockServiceTemplate">
     <div class="table-responsive">
-        <table class="table table-striped table-hover" id="table_stock">
+        <table class="table table-striped table-hover" id="tableStockService">
             <thead class="thead-light">
                 <tr>
                     <th>{l s='Combinazione' mod='mpstockservice'}</th>
@@ -148,7 +148,7 @@
                 </tr>
             </thead>
             <tbody>
-                {foreach $combinations as $row}
+                {foreach $rows as $row}
                     <tr id_product_attribute="{$row.id_product_attribute}">
                         <td style="width: auto;">
                             <strong>{$row.combination}</strong>
@@ -161,7 +161,7 @@
                         </td>
                         <td style="width: auto;">
                             <select class="form-control ss_id_supplier" name="ss_id_supplier[{$row.id_product_attribute}]">
-                                <option value="0">{l s='Seleziona un fornitore' mod='mpstockservice'}</option>
+                                <option value="0">{l s='--' mod='mpstockservice'}</option>
                                 {foreach $suppliers as $supplier}
                                     <option value="{$supplier.id_supplier}" {if $row.id_supplier==$supplier.id_supplier}selected{/if}>{$supplier.name}</option>
                                 {/foreach}
@@ -181,12 +181,16 @@
                     {/foreach}
             </tbody>
         </table>
-        <div style="display: flex; justify-content: center; align-items: center;">
+        <div style="display: flex; justify-content: center; align-items: center; padding: 1rem;">
             <button type="button" name="submitStockProduct" id="submitStockProduct" class="btn btn-primary">
                 <i class="material-icons">save</i>&nbsp;{l s='Salva Modifiche' mod='mpstockservice'}
             </button>
         </div>
     </div>
+</template>
+
+<template id="UploadStockServiceResponse">
+
 </template>
 
 <!-- Carica gli script prima del modulo ES6 -->
@@ -210,26 +214,29 @@
     //Importa navigatore elementi
     import ArrowNavigator from '/modules/mpstockservice/views/js/Navigator/ArrowNavigator.js';
 
-    const ajax_controller = "{$ajax_controller}";
     const actionToggleStockService = "{$actionToggleStockService}";
     const actionUpdateStockService = "{$actionUpdateStockService}";
+    const actionResetStockService = "{$actionResetStockService}";
+    const actionUploadFile = "{$actionUploadFile}";
     const is_stock_service = "{$is_stock_service}";
-    const combinations = {$combinations|json_encode nofilter};
+    const combinations = {$rows|json_encode nofilter};
     const id_product = "{$id_product}";
     const tableStockServiceRow = document.getElementById('tableStockServiceRowTemplate');
+    const z_index_swal = 15000; // Definisci il tuo z-index desiderato
     var buttonIcon = "";
 
     // Utilizziamo le funzioni importate dal modulo
     document.addEventListener('DOMContentLoaded', function() {
         // Inizializziamo il modulo Stock Service passando tutti i parametri necessari
         initStockService({
-            ajax_controller,
             is_stock_service,
             id_product,
             DisplayProductExtra,
             actions: {
                 actionToggleStockService,
                 actionUpdateStockService,
+                actionResetStockService,
+                actionUploadFile
             }
         });
 
