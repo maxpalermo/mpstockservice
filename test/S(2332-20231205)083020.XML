@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<movements>
+ <movement_type>66</movement_type>
+ <movement_date>2023-12-05</movement_date>
+        
+<rows>
+<row>
+  <ean13>8050687002035</ean13>
+ <reference>ISA002700</reference>
+  <qty>4</qty>
+  <price>19.02</price>
+  <wholesale_price>0</wholesale_price>
+</row>
+<row>
+  <ean13>8050687029872</ean13>
+ <reference>ISA044000</reference>
+  <qty>4</qty>
+  <price>9.59</price>
+  <wholesale_price>0</wholesale_price>
+</row>
+<row>
+  <ean13>8000000090072</ean13>
+ <reference>RICAMO-LOGO</reference>
+  <qty>4</qty>
+  <price>2.46</price>
+  <wholesale_price>0</wholesale_price>
+</row>
+</rows>
+
+</movements>

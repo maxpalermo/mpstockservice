@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<movements>
+ <movement_type>4</movement_type>
+ <movement_date>2023-12-05</movement_date>
+    
+<rows>
+<row>
+  <ean13>8050687031608</ean13>
+ <reference>ISA044610</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>14.99</wholesale_price>
+</row>
+</rows>
+
+</movements>

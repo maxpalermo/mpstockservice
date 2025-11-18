@@ -1,0 +1,22 @@
+<div class="d-flex justify-content-center align-items-center">
+    <table class="bootstrap table table-bordered table-hover table-striped"  style="width: auto;">
+        <thead>
+            <tr>
+                <th style="text-align: center; padding: 1rem; text-transform: uppercase;">ean13</th>
+                <th style="text-align: center; padding: 1rem; text-transform: uppercase;">combinazione</th>
+                <th style="text-align: center; padding: 1rem; text-transform: uppercase;">quantità</th>
+                <th style="text-align: center; padding: 1rem; text-transform: uppercase;">data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td style="padding: 1rem; text-align: center;">{{ row.ean13 }}</td>
+                <td style="padding: 1rem; text-align: center;">{{ row.combination }}</td>
+                <td style="padding: 1rem; text-align: center;">{{ row.quantity }}</td>
+                <td style="padding: 1rem; text-align: center;">{{ row.document_date | date('d/m/Y') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

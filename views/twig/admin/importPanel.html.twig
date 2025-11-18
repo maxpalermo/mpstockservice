@@ -1,0 +1,40 @@
+<div class="card" id="table-toolbar" style="display: none;">
+    <div class="panel-body">
+        <div class="d-flex justify-content-between align-items-center gap-4 mb-4">
+            <div class="panel grow-1" style="width: 100%">
+                <div class="panel-heading">
+                    <span>Importa Stock Service da XML</span>
+                </div>
+                <div class="panel-body d-flex justify-content-center align-items-center gap-4">
+                    <div class="ps-switch-container mr-4">
+                        <label>Forzare l'inserimento di tutti i dati stock-service?</label>
+                        <div class="form-group">
+                            <div class="form-input">
+                                <span class="switch prestashop-switch fixed-width-lg">
+                                <input type="radio" name="switch_force_stock_service" id="switch_force_stock_service_on" value="1">
+                                <label for="switch_force_stock_service_on"><i class="icon icon-2x icon-check text-success"></i></label>
+                                <input type="radio" name="switch_force_stock_service" id="switch_force_stock_service_off" value="0" checked="checked">
+                                <label for="switch_force_stock_service_off"><i class="icon icon-2x icon-times text-danger"></i></label>
+                                <a class="slide-button btn"></a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-start align-items-bottom gap-2">
+                        <input type="file" style="display: none;" id="fileUpload" accept=".xml">
+                        <button type="button" class="btn btn-primary btn-sm" id="btnSelectFile" title="Seleziona file XML">
+                            <span class="material-icons">file_open</span>
+                        </button>
+                        <input type="text" class="form-control" id="fakeFile" readonly>
+                        <button type="button" class="btn btn-success btn-sm" id="btnLoadFile" title="Carica prodotti">
+                            <span class="material-icons">upload</span>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" id="btnUnloadFile" title="Scarica prodotti">
+                            <span class="material-icons">download</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

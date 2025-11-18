@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -21,8 +22,10 @@
  */
 
 namespace MpSoft\MpStockService\Hooks;
+
 use MpSoft\MpStockService\Helpers\ProductUtils;
 use MpSoft\MpStockService\Helpers\SmartyHelper;
+use MpSoft\MpStockService\Models\ModelMpStockService;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 if (!defined('_PS_VERSION_')) {
@@ -51,7 +54,7 @@ class MpStockServiceHookController
         $this->id_product = (int) \Tools::getValue('id_product');
         $this->id_lang = (int) $this->context->language->id;
         $this->id_shop = (int) $this->context->shop->id;
-        $this->table = \ModelMpStockService::$definition['table'];
+        $this->table = ModelMpStockService::$definition['table'];
         $this->ajax_controller = \Context::getContext()->link->getAdminLink('AdminMpStockService');
         $this->smartyHelper = new SmartyHelper();
         $this->is_stock_service = false;
@@ -69,24 +72,7 @@ class MpStockServiceHookController
         $rows = $xmlData->rows;
         $output = [];
         foreach ($rows->children() as $row) {
-            /*
-			PrestaShopLogger::addLog(
-                sprintf(
-                    "Recupero prodotto con ean13 %s",
-                    $row->ean13
-                )
-            );
-			*/
             $product = $this->getProductAttribute((string) $row->ean13, $row->reference);
-            /*
-			PrestaShopLogger::addLog(
-                sprintf(
-                    "Prodotto con ean13 %s: %s",
-                    $row->ean13,
-                    print_r($product, 1)
-                )
-            );
-			*/
             $output[] = [
                 'id_product' => $product['id_product'],
                 'id_product_attribute' => $product['id_product_attribute'],
@@ -114,7 +100,7 @@ class MpStockServiceHookController
 
         $db = \Db::getInstance();
         $sql = 'select id_product, id_product_attribute from '
-            . _DB_PREFIX_ . 'product_attribute where ean13 = \'' . $ean13 . '\'';
+            . _DB_PREFIX_ . "product_attribute where ean13 = '" . $ean13 . "'";
         $res = $db->getRow($sql);
         if (!$res) {
             return [
@@ -200,7 +186,7 @@ class MpStockServiceHookController
         foreach ($content as $key => $row) {
             if ($row['id_product']) {
                 $this->prepareStockProduct($row['id_product']);
-                $obj = new \ModelMpStockService($row['id_product_attribute']);
+                $obj = new ModelMpStockService($row['id_product_attribute']);
                 $obj->force_id = true;
                 $obj->id = $row['id_product_attribute'];
                 $obj->id_product = $row['id_product'];
@@ -234,25 +220,26 @@ class MpStockServiceHookController
                     }
                     $ean13 = $row['ean13'];
                     $productName = \Product::getProductName((int) $row['id_product'], (int) $row['id_product_attribute']);
+
                     /*
-					PrestaShopLogger::addLog(
-                        sprintf(
-                            "Stock service per %s %s. Il prodotto %s era presente in archivio."
-                            ." Il processo ha avuto esito %s. Qta iniziale: %d, variazione: %d, risultato: %d, valore attuale: %d",
-                            $ean13,
-                            $productName,
-                            $exists,
-                            $str_res,
-                            $qty,
-                            $var,
-                            $tot,
-                            (int)$obj->quantity
-                        ),
-                        2,
-                        0,
-                        'StockService'
-                    );
-					*/
+                     * PrestaShopLogger::addLog(
+                     *     sprintf(
+                     *         "Stock service per %s %s. Il prodotto %s era presente in archivio."
+                     *         ." Il processo ha avuto esito %s. Qta iniziale: %d, variazione: %d, risultato: %d, valore attuale: %d",
+                     *         $ean13,
+                     *         $productName,
+                     *         $exists,
+                     *         $str_res,
+                     *         $qty,
+                     *         $var,
+                     *         $tot,
+                     *         (int)$obj->quantity
+                     *     ),
+                     *     2,
+                     *     0,
+                     *     'StockService'
+                     * );
+                     */
                     $i++;
                 }
             }
@@ -275,29 +262,33 @@ class MpStockServiceHookController
     {
         $db = \Db::getInstance();
         $sql = new \DbQuery();
-        $sql->select('count(*)')
+        $sql
+            ->select('count(*)')
             ->from('mpstockservice')
             ->where('id_product=' . (int) $id_product);
         $stock_comb = (int) $db->getValue($sql);
         $sql = new \DbQuery();
-        $sql->select('count(*)')
+        $sql
+            ->select('count(*)')
             ->from('product_attribute')
             ->where('id_product=' . (int) $id_product);
         $prod_comb = (int) $db->getValue($sql);
         if ($prod_comb != $stock_comb) {
             $sql = new \DbQuery();
-            $sql->select('id_product_attribute')
+            $sql
+                ->select('id_product_attribute')
                 ->from('product_attribute')
                 ->where('id_product=' . (int) $id_product);
             $id_product_attributes = $db->executeS($sql);
             foreach ($id_product_attributes as $id) {
                 $sql = new \DbQuery();
-                $sql->select('count(*)')
+                $sql
+                    ->select('count(*)')
                     ->from('mpstockservice')
                     ->where('id_product_attribute=' . (int) $id['id_product_attribute']);
                 $res = (int) $db->getValue($sql);
                 if (!$res) {
-                    $obj = new \ModelMpStockService($id['id_product_attribute']);
+                    $obj = new ModelMpStockService($id['id_product_attribute']);
                     $obj->force_id = true;
                     $obj->id = $id['id_product_attribute'];
                     $obj->id_product = $id_product;
@@ -325,13 +316,13 @@ class MpStockServiceHookController
     {
         $productUtils = new ProductUtils($this->module);
         $id_product = (int) $this->id_product;
-        $isStockService = \ModelMpStockService::isStockServiceProduct($id_product);
+        $isStockService = ModelMpStockService::isStockServiceProduct($id_product);
         $data = [
             'id_product' => $id_product,
             'is_stock_service' => $isStockService,
             'rows' => $productUtils->getCombinations(new \Product($id_product)),
             'suppliers' => \Supplier::getSuppliers($this->id_lang),
-            'base_url' => (\Configuration::get('PS_SSL_ENABLED') ? _PS_BASE_URL_SSL_ : _PS_BASE_URL_) . '/',
+            'baseUrl' => $this->context->link->getBaseLink(),
             'actionToggleStockService' => $this->getActionUrl('toggle_stock_service', ['id_product' => $id_product], true),
             'actionUpdateStockService' => $this->getActionUrl('update_stock_service', ['id_product' => $id_product], true),
             'actionResetStockService' => $this->getActionUrl('reset_stock_service', ['id_product' => $id_product], true),
@@ -415,7 +406,7 @@ class MpStockServiceHookController
         if ($isStockService) {
             foreach ($rows as $row) {
                 $error = '';
-                $stock = new \ModelMpStockService();
+                $stock = new ModelMpStockService();
                 $stock->force_id = true;
                 $stock->id = $row['id_product_attribute'];
                 $stock->id_product = $row['id_product'];
@@ -475,7 +466,8 @@ class MpStockServiceHookController
     {
         $db = $this->db;
         $sql = new \DbQuery();
-        $sql->select('count(*)')
+        $sql
+            ->select('count(*)')
             ->from($this->table)
             ->where('id_product_attribute = ' . (int) $id_product_attribute);
 

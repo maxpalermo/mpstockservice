@@ -1,0 +1,114 @@
+<link rel="stylesheet" href="{{ asset('js/bs-table/bootstrap-table.min.css') }}">
+<link rel="stylesheet" href="{{ asset('css/chosen/component-chosen.min.css') }}">
+<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+
+<section class="table-list mt-4">
+    <div class="{% if controller=='AdminProducts' %}card{% else %}panel{% endif %}">
+        <div class="{% if controller=='AdminProducts' %}card-header{% else %}panel-heading{% endif %}">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <div class="title">
+                    <span class="material-icons mr-2">shopping_cart</span>
+                    <span>STOCK SERVICE</span>
+                </div>
+                <div class="alert grow-1 d-none" id="alert-message-stock-service">
+                    <!-- Contenuto dinamico -->
+                </div>
+            </div>
+        </div>
+        <div class="{% if controller=='AdminProducts' %}card-body{% else %}panel-body{% endif %}">
+            <div id="table-toolbar" class="d-flex justify-content-between align-items-center gap-4 mb-4">
+                
+                <div class="card" style="width: auto">
+                    <div class="card-header">
+                        <span>Attivare il servizio Stock Service?</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="ps-switch-container mr-4">
+                            <div class="ps-switch ps-switch-lg ps-togglable-row">
+                                <input type="radio" name="switch_stock_service" id="switch_stock_service_off" value="0" {%if isStockService == 0%}checked{%endif%}>
+                                <label for="switch_stock_service_off">
+                                    <span class="material-icons text-danger">close</span>
+                                </label>
+                                <input type="radio" name="switch_stock_service" id="switch_stock_service_on" value="1" {%if isStockService == 1%}checked{%endif%}>
+                                <label for="switch_stock_service_on">
+                                    <span class="material-icons text-success">check</span>
+                                </label>
+                                <span class="slide-button"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="width: 100%">
+                    <div class="card-header">
+                        <span>Importa Stock Service da XML</span>
+                    </div>
+                    <div class="card-body d-flex justify-content-center align-items-center gap-4">
+                        <div class="ps-switch-container mr-4">
+                            <label>Forzare l'inserimento di tutti i dati stock-service?</label>
+                            <div class="ps-switch ps-switch-lg ps-togglable-row">
+                                <input type="radio" name="switch_force_stock_service" id="switch_force_stock_service_off" value="0" checked>
+                                <label for="switch_force_stock_service_off">
+                                    <span class="material-icons text-danger">close</span>
+                                </label>
+                                <input type="radio" name="switch_force_stock_service" id="switch_force_stock_service_on" value="1">
+                                <label for="switch_force_stock_service_on">
+                                    <span class="material-icons text-success">check</span>
+                                </label>
+                                <span class="slide-button"></span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-start align-items-bottom gap-2">
+                            <input type="file" style="display: none;" id="fileUpload" accept=".xml">
+                            <button type="button" class="btn btn-primary btn-sm" id="btnSelectFile" title="Seleziona file XML">
+                                <span class="material-icons">file_open</span>
+                            </button>
+                            <input type="text" class="form-control" id="fakeFile" readonly>
+                            <button type="button" class="btn btn-success btn-sm" id="btnLoadFile" title="Carica prodotti">
+                                <span class="material-icons">upload</span>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" id="btnUnloadFile" title="Scarica prodotti">
+                                <span class="material-icons">download</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <table id="table-list-stock-service" class="table table-striped table-condensed table-bordered"></table>
+        </div>
+        <div class="{% if controller=='AdminProducts' %}card-footer{% else %}panel-footer{% endif %}">
+            <div class="d-flex justify-content-end align-items-center">
+                <button class="btn btn-primary" id="btnSaveStockService">
+                    <span class="material-icons mr-2">save</span>
+                    <span>Salva</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="{{ asset('js/bs-table/bootstrap-table.min.js') }}"></script>
+<script src="{{ asset('js/bs-table/locale/bootstrap-table-it-IT.min.js') }}"></script>
+<script src="{{ asset('js/test/test-list.js') }}"></script>
+<script src="{{ asset('js/test/test-import.js') }}"></script>
+<script src="{{ asset('js/displayProductExtra.js') }}"></script>
+<script src="{{ asset('js/importResults.js') }}"></script>
+
+<script type="text/javascript">
+    const adminControllerUrl = "{{ adminControllerUrl|raw }}";
+    const idProduct = {{ id_product }};
+    const suppliers = {{ suppliers|raw }};
+    const combinations = {{ combinations|raw }};
+    const isStockService = {{ isStockService }};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded');
+        initTableStockService();
+        bindToolbarBtnActions();
+        const table = document.getElementById('table-list-stock-service');
+        const divFixedStyle = table.closest(".fixed-table-body");
+        divFixedStyle.style.overflow = "auto";
+    });    
+</script>
+
+{% include 'hooks/importResults.html.twig' %}

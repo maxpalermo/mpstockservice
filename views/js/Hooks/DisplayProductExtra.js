@@ -51,7 +51,7 @@ export async function resetStockQuantities(e, action) {
     window.swalLoading();
 
     const response = await fetch(action, {
-        method: "POST"
+        method: "POST",
     });
 
     if (!response) {
@@ -98,21 +98,21 @@ export async function submitStockQuantities(e, action) {
         const idProductAttribute = row.getAttribute("id_product_attribute");
         const stock = row.querySelector("td:nth-child(2) input").value;
         const quantity = row.querySelector("td:nth-child(3) input").value;
-        const idSupplier = row.querySelector("td:nth-child(4) select").value;
-        const number = row.querySelector("td:nth-child(5) input").value;
-        const date = row.querySelector("td:nth-child(6) input").value;
+        //const idSupplier = row.querySelector("td:nth-child(4) select").value;
+        const number = row.querySelector("td:nth-child(4) input").value;
+        const date = row.querySelector("td:nth-child(5) input").value;
         rowsData.push({
             id_product_attribute: idProductAttribute,
             stock: stock,
             quantity: quantity,
-            id_supplier: idSupplier,
+            id_supplier: 0,
             number: number,
-            date: date
+            date: date,
         });
     });
 
     let data = {
-        rows: JSON.stringify(rowsData)
+        rows: JSON.stringify(rowsData),
     };
 
     window.swalLoading();
@@ -120,9 +120,9 @@ export async function submitStockQuantities(e, action) {
     const response = await fetch(action, {
         method: "POST",
         headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams(data)
+        body: new URLSearchParams(data),
     });
 
     if (!response) {
@@ -164,8 +164,8 @@ export function initFileUploader(action, isCheckedValue) {
             invalidFormat: "Formato non valido",
             selectXmlFile: "Per favore seleziona un file XML.",
             error: "Error",
-            ajaxError: "AJAX ERROR"
-        }
+            ajaxError: "AJAX ERROR",
+        },
     });
 }
 
@@ -196,7 +196,7 @@ export function updateEan13(ean13) {
     let data = {
         ajax: true,
         action: "updateEan13",
-        ean13: ean13
+        ean13: ean13,
     };
 
     $.post("", data, function (response) {
@@ -205,14 +205,14 @@ export function updateEan13(ean13) {
                 title: "Operazione completata.",
                 text: response.message,
                 icon: "success",
-                confirmButtonText: "OK"
+                confirmButtonText: "OK",
             });
         } else {
             Swal.fire({
                 title: "ERRORE.",
                 text: response.message,
                 icon: "error",
-                confirmButtonText: "OK"
+                confirmButtonText: "OK",
             });
         }
     });
@@ -231,7 +231,7 @@ function handleFiles(files) {
                 title: "{l s='Formato non valido' mod='mpstockservice'}",
                 text: "{l s='Per favore seleziona un file XML.' mod='mpstockservice'}",
                 icon: "error",
-                confirmButtonText: "OK"
+                confirmButtonText: "OK",
             });
             fileInput.value = "";
         }
@@ -252,8 +252,8 @@ export function initializeSelect2() {
             language: {
                 noResults: function () {
                     return "Nessun risultato trovato";
-                }
-            }
+                },
+            },
         })
         .on("select2:open", function () {
             // Focus automatico sulla casella di ricerca quando si apre il dropdown
@@ -266,7 +266,7 @@ export function initializeSelect2() {
     $(".chosen")
         .select2({
             width: "200px",
-            minimumResultsForSearch: 10 // Mostra la ricerca solo se ci sono più di 10 opzioni
+            minimumResultsForSearch: 10, // Mostra la ricerca solo se ci sono più di 10 opzioni
         })
         .on("select2:open", function () {
             // Focus automatico sulla casella di ricerca quando si apre il dropdown

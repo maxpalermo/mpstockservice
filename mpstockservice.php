@@ -1,10 +1,5 @@
 <?php
 
-use Doctrine\ORM\QueryBuilder;
-use MpSoft\MpStockService\Helpers\ProductUtils;
-use MpSoft\MpStockService\Install\InstallMenu;
-use MpSoft\MpStockService\Install\TableGenerator;
-
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -28,15 +23,21 @@ if (!defined('_PS_VERSION_')) {
 }
 
 require_once _PS_MODULE_DIR_ . 'mpstockservice/vendor/autoload.php';
-require_once _PS_MODULE_DIR_ . 'mpstockservice/models/autoload.php';
 
+use Doctrine\DBAL\Query\QueryBuilder;
+use MpSoft\MpStockService\Helpers\GetTwigEnvironment;
+use MpSoft\MpStockService\Helpers\ProductUtils;
+use MpSoft\MpStockService\Install\InstallMenu;
+use MpSoft\MpStockService\Models\ModelMpStockService;
+use MpSoft\MpStockService\Models\ModelMpStockServiceCheck;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ToggleColumn;
 use PrestaShop\PrestaShop\Core\Grid\Definition\GridDefinitionInterface;
 use PrestaShop\PrestaShop\Core\Grid\Filter\Filter;
+use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
 use PrestaShop\PrestaShop\Core\Search\Filters;
 use PrestaShopBundle\Form\Admin\Type\YesAndNoChoiceType;
 
-class MpStockService extends Module
+class MpStockService extends Module implements WidgetInterface
 {
     protected $adminClassName;
     protected $id_lang;
@@ -48,7 +49,7 @@ class MpStockService extends Module
     {
         $this->name = 'mpstockservice';
         $this->tab = 'administration';
-        $this->version = '1.2.0';
+        $this->version = '1.3.1';
         $this->author = 'Massimiliano Palermo';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '8.0', 'max' => _PS_VERSION_];
@@ -75,23 +76,22 @@ class MpStockService extends Module
     public function install()
     {
         $menuInstaller = new InstallMenu($this);
-        $tableInstaller = new TableGenerator($this);
 
         if (Shop::isFeatureActive()) {
             Shop::setContext(ShopCore::CONTEXT_ALL);
         }
 
-        return parent::install()
-            && $this->registerHook([
+        return parent::install() &&
+            $this->registerHook([
                 'actionAdminControllerSetMedia',
                 'actionProductGridDefinitionModifier',
                 'actionProductGridQueryBuilderModifier',
                 'displayAdminProductsExtra',
                 'displayProductExtraContent',
-            ])
-            && $tableInstaller->createTable(ModelMpStockService::$definition)
-            && $tableInstaller->createTable(ModelMpStockServiceCheck::$definition)
-            && $menuInstaller->installMenu(
+            ]) &&
+            ModelMpStockService::install() &&
+            ModelMpStockServiceCheck::install() &&
+            $menuInstaller->installMenu(
                 $this->adminClassName,
                 $this->l('Admin Stock Service'),
                 'AdminCatalog',
@@ -103,59 +103,56 @@ class MpStockService extends Module
     {
         $menuInstaller = new InstallMenu($this);
 
-        return parent::uninstall()
-            && $menuInstaller->uninstallMenu($this->adminClassName);
+        return parent::uninstall() &&
+            $menuInstaller->uninstallMenu($this->adminClassName);
     }
 
-    /**
-     * Define the routes used by the module
-     *
-     * @return array
-     */
-    public function getRoutes()
+    public function getWidgetVariables($hookName, array $configuration)
     {
-        return [
-            'mpstockservice_toggle_is_checked' => [
-                'path' => 'mpstockservice/{id_product}/toggle-is-checked',
-                'methods' => ['POST'],
-                'defaults' => [
-                    '_controller' => 'MpSoft\\MpStockService\\Controllers\\Admin\\ProductStockServiceController::toggleIsCheckedAction',
-                ],
-                'requirements' => [
-                    'id_product' => '\\d+',
-                ],
-            ],
-        ];
+        return [];
+    }
+
+    public function renderWidget($hookName, array $configuration)
+    {
+        switch ($hookName) {
+            case 'actionAdminControllerSetMedia':
+                break;
+            case 'displayAdminProductsExtra':
+                $controller = Tools::getValue('controller');
+                $twig = new GetTwigEnvironment($this->name);
+                $template = $twig->load('@ModuleTwig/hooks/displayProductExtra.html.twig');
+                $id_product = (int) $configuration['id_product'];
+                $variables = [
+                    'id_product' => $id_product,
+                    'suppliers' => json_encode(Supplier::getSuppliers()),
+                    'controller' => $controller,
+                    'adminControllerUrl' => $this->context->link->getAdminLink('AdminMpStockService'),
+                    'isStockService' => (int) ModelMpStockServiceCheck::isStockService($id_product),
+                    'combinations' => json_encode(ModelMpStockService::getStockServiceByProduct($id_product)),
+                ];
+                return $template->render($variables);
+
+            default:
+                return '';
+        }
     }
 
     public function hookActionAdminControllerSetMedia($params)
     {
         $controller = Tools::getValue('controller');
         if (preg_match('/^AdminProduct/i', $controller)) {
-            $jsPath = $this->getLocalPath() . 'views/js';
             $cssPath = $this->getLocalPath() . 'views/css';
             $this->context->controller->addCSS([
                 $cssPath . '/icons.css',
-                $cssPath . '/vertical-menu.css',
-                $jsPath . '/tippy/scale.css',
-                $cssPath . '/file.css',
-                $cssPath . '/select2.min.css',
-                $cssPath . '/StockServiceTable.css',
             ], 'all', 9999);
-            $this->context->controller->addJS([
-                $jsPath . '/swal2/sweetalert2.all.min.js',
-                $jsPath . '/tippy/popper-core2.js',
-                $jsPath . '/tippy/tippy.js',
-                $jsPath . '/select2.min.js',
-            ]);
         }
     }
 
-    public function hookDisplayAdminProductsExtra($params)
+    public function hook_DisplayAdminProductsExtra($params)
     {
+        $id_product = (int) $params['id_product'];
         $productUtils = new ProductUtils($this);
         $controller = new MpSoft\MpStockService\Hooks\MpStockServiceHookController($this);
-        $id_product = (int) $params['id_product'];
         $product = new Product($id_product, false, $this->id_lang);
         if (Validate::isLoadedObject($product)) {
             $combinations = $productUtils->getCombinations($product);
@@ -168,39 +165,7 @@ class MpStockService extends Module
 
     public function hookDisplayProductExtraContent($params)
     {
-        /** @var ProductUtils */
-        $productUtils = new ProductUtils($this);
-        /** @var Product */
-        $product = $params['product'];
-        $db = $this->db;
-        $sql = sprintf(
-            "SELECT a.is_stock_service, CONCAT(c.firstname, ' ', c.lastname) as employee, a.date_upd FROM %s a LEFT JOIN %s c ON a.id_employee = c.id_employee WHERE a.id_product = %d",
-            _DB_PREFIX_ . ModelMpStockServiceCheck::$definition['table'],
-            _DB_PREFIX_ . 'employee',
-            (int) $product->id
-        );
-        $row = $db->getRow($sql);
-        if (!$row) {
-            $row = [
-                'is_stock_service' => 0,
-                'employee_name' => '--',
-                'date_upd' => '',
-            ];
-        }
-
-        $tpl = $this->context->smarty->createTemplate($this->getLocalPath() . 'views/templates/hook/displayPanelQuantityCheck.tpl');
-
-        $tpl->assign(
-            [
-                'link' => $this->context->link,
-                'actionSetStockServiceUrl' => $this->getActionUrl($this->adminClassName, 'setStockService'),
-                'product' => $product,
-                'combinations' => $productUtils->getCombinations($product),
-                'checkProduct' => $row,
-            ]
-        );
-
-        return $tpl->fetch();
+        // Nothing
     }
 
     public function hookActionProductGridDefinitionModifier(array $params)
@@ -249,6 +214,14 @@ class MpStockService extends Module
             if ($filterName == 'is_stock_service' && $filterValue !== '') {
                 $queryBuilder->andWhere('COALESCE(ss.is_stock_service, 0) = :is_stock_service');
                 $queryBuilder->setParameter('is_stock_service', $filterValue);
+
+                // Modifica anche la query di conteggio
+                $countQueryBuilder = $params['count_query_builder'] ?? null;
+                // Applica lo stesso filtro alla query di conteggio
+                if ($countQueryBuilder !== null) {
+                    $countQueryBuilder->andWhere('COALESCE(ss.is_stock_service, 0) = :is_stock_service');
+                    $countQueryBuilder->setParameter('is_stock_service', $filterValue);
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -20,14 +21,18 @@
 
 namespace MpSoft\MpStockService\Helpers;
 
+use MpSoft\MpStockService\Models\ModelMpStockService;
+
 class StockServiceList
 {
     protected $rows;
     protected $module;
     protected $id_lang;
+    protected $number_document;
 
-    public function __construct($list, $force = false)
+    public function __construct($number_document, $list, $force = false)
     {
+        $this->number_document = $number_document;
         $this->rows = $list;
         $this->module = \Module::getInstanceByName('mpstockservice');
         $this->force = $force;
@@ -68,6 +73,7 @@ class StockServiceList
             }
 
             $row['id_supplier'] = 0;
+            $row['number_document'] = $this->number_document;
             $row['date'] = date('Y-m-d H:i:s');
             $row['name'] = $this->getProductName($row['id_product']);
             $row['combination'] = $this->getCombinationName($row['id_product'], $row['id_product_attribute']);
@@ -154,7 +160,7 @@ class StockServiceList
     protected function doUpdate($force, $sign = 1)
     {
         foreach ($this->rows as &$row) {
-            $model = new \ModelMpStockService($row['id_product_attribute']);
+            $model = new ModelMpStockService($row['id_product_attribute']);
             if ($force && !\Validate::isLoadedObject($model)) {
                 $row['variation'] = $row['quantity'];
                 $row['before'] = $model->quantity;
@@ -162,7 +168,7 @@ class StockServiceList
                 $model->id = $row['id_product_attribute'];
                 $model->id_product = $row['id_product'];
                 $model->id_supplier = 0;
-                $model->number = '';
+                $model->number = $row['number_document'];
                 $model->date = date('Y-m-d H:i:s');
                 $model->quantity = (int) $row['quantity'] < 0 ? 0 : (int) $row['quantity'];
                 $model->add();
@@ -177,7 +183,7 @@ class StockServiceList
                     $model->id = $row['id_product_attribute'];
                     $model->id_product = $row['id_product'];
                     $model->id_supplier = 0;
-                    $model->number = '';
+                    $model->number = $row['number_document'];
                     $model->date = date('Y-m-d H:i:s');
                     $model->quantity += (int) $row['quantity'] * $sign;
                     if ($model->quantity < 0) {

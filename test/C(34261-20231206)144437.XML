@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<movements>
+ <movement_type>28</movement_type>
+ <movement_date>2023-12-05</movement_date>
+                                                                                                  
+<rows>
+<row>
+  <ean13>8050687191975</ean13>
+ <reference>ISA044717F</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>12.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687230834</ean13>
+ <reference>ISA061590M</reference>
+  <qty>3</qty>
+  <price>0</price>
+  <wholesale_price>15.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687019323</ean13>
+ <reference>ISA025315T</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>14.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687143134</ean13>
+ <reference>ISA055016</reference>
+  <qty>3</qty>
+  <price>0</price>
+  <wholesale_price>14.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687105866</ean13>
+ <reference>ISA031593M</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>15.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687223805</ean13>
+ <reference>ISA003012M</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>18.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687224529</ean13>
+ <reference>ISA055012P</reference>
+  <qty>3</qty>
+  <price>0</price>
+  <wholesale_price>15.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687125093</ean13>
+ <reference>ISA055004P</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>17.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687153195</ean13>
+ <reference>ISA059301Z</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>15.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687053235</ean13>
+ <reference>ISA112400</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>22.08</wholesale_price>
+</row>
+<row>
+  <ean13>8050687040730</ean13>
+ <reference>ISA059300</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>15.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687220248</ean13>
+ <reference>ISA009200</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>11.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687077354</ean13>
+ <reference>ISA002126</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>14.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687072236</ean13>
+ <reference>ISA116000</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>2.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687068604</ean13>
+ <reference>ISA086626</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>3.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687041997</ean13>
+ <reference>ISA060200</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>14.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687037440</ean13>
+ <reference>ISA056001</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>11.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687006743</ean13>
+ <reference>ISA007150</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>12.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687172097</ean13>
+ <reference>ISA066605</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>15.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687220347</ean13>
+ <reference>ISA009210</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>11.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687127745</ean13>
+ <reference>ISA005286</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>11.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687127738</ean13>
+ <reference>ISA005286</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>11.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687127721</ean13>
+ <reference>ISA005286</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>11.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687139748</ean13>
+ <reference>ISA008000</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>8.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687009003</ean13>
+ <reference>ISA008000</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>8.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687008990</ean13>
+ <reference>ISA008000</reference>
+  <qty>8</qty>
+  <price>0</price>
+  <wholesale_price>8.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687008983</ean13>
+ <reference>ISA008000</reference>
+  <qty>8</qty>
+  <price>0</price>
+  <wholesale_price>8.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687009010</ean13>
+ <reference>ISA008000</reference>
+  <qty>11</qty>
+  <price>0</price>
+  <wholesale_price>8.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687009027</ean13>
+ <reference>ISA008000</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>8.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687045155</ean13>
+ <reference>ISA062000</reference>
+  <qty>20</qty>
+  <price>0</price>
+  <wholesale_price>7.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687045162</ean13>
+ <reference>ISA062000</reference>
+  <qty>10</qty>
+  <price>0</price>
+  <wholesale_price>7.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687031080</ean13>
+ <reference>ISA044200</reference>
+  <qty>34</qty>
+  <price>0</price>
+  <wholesale_price>8.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687031073</ean13>
+ <reference>ISA044200</reference>
+  <qty>20</qty>
+  <price>0</price>
+  <wholesale_price>8.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687031066</ean13>
+ <reference>ISA044200</reference>
+  <qty>40</qty>
+  <price>0</price>
+  <wholesale_price>8.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687031097</ean13>
+ <reference>ISA044200</reference>
+  <qty>6</qty>
+  <price>0</price>
+  <wholesale_price>8.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687068925</ean13>
+ <reference>ISA087005</reference>
+  <qty>7</qty>
+  <price>0</price>
+  <wholesale_price>5.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687092494</ean13>
+ <reference>ISA072161</reference>
+  <qty>8</qty>
+  <price>0</price>
+  <wholesale_price>4.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687129121</ean13>
+ <reference>ISA013307</reference>
+  <qty>4</qty>
+  <price>0</price>
+  <wholesale_price>11.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687068345</ean13>
+ <reference>ISA086014</reference>
+  <qty>4</qty>
+  <price>0</price>
+  <wholesale_price>3.49</wholesale_price>
+</row>
+<row>
+  <ean13>8050687135931</ean13>
+ <reference>ISA057535</reference>
+  <qty>1</qty>
+  <price>0</price>
+  <wholesale_price>14.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687052436</ean13>
+ <reference>ISA112100</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>18.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687052450</ean13>
+ <reference>ISA112100</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>18.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687052474</ean13>
+ <reference>ISA112100</reference>
+  <qty>4</qty>
+  <price>0</price>
+  <wholesale_price>18.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687052498</ean13>
+ <reference>ISA112100</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>18.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687052443</ean13>
+ <reference>ISA112100</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>18.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687052467</ean13>
+ <reference>ISA112100</reference>
+  <qty>4</qty>
+  <price>0</price>
+  <wholesale_price>18.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687052481</ean13>
+ <reference>ISA112100</reference>
+  <qty>4</qty>
+  <price>0</price>
+  <wholesale_price>18.99</wholesale_price>
+</row>
+<row>
+  <ean13>8050687147521</ean13>
+ <reference>ISA005371</reference>
+  <qty>2</qty>
+  <price>0</price>
+  <wholesale_price>15.99</wholesale_price>
+</row>
+</rows>
+
+</movements>

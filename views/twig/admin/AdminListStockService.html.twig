@@ -1,0 +1,64 @@
+<link rel="stylesheet" href="{{ asset('js/bs-table/bootstrap-table.min.css') }}">
+<style>
+    .d-flex {
+        display: flex;
+    }
+
+    .justify-content-center {
+        justify-content: center;
+    }
+
+    .align-items-center {
+        align-items: center;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    .gap-4 {
+        gap: 2rem;
+    }
+
+    .grow-1 {
+        flex-grow: 1;
+    }
+
+    .mb-4 {
+        margin-bottom: 2rem;
+    }
+
+</style>
+
+<div class="bootstrap container">
+    <section class="import-panel">
+        {% include 'admin/importPanel.html.twig' %}
+    </section>
+
+    <section class="table-list">
+        <div class="panel">
+            <div class="panel-heading">
+                Prodotti in stock service
+            </div>
+            <div class="panel-body">
+                <table id="table-list-stock-service" data-toggle="table" data-url=""></table>
+            </div>
+            <div class="panel-footer text-center">
+                - {{ "now" | date('d/m/Y H:i:s')}} -
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="{{ asset('js/bs-table/bootstrap-table.min.js') }}"></script>
+<script src="{{ asset('js/bs-table/locale/bootstrap-table-it-IT.min.js') }}"></script>
+<script src="{{ asset('js/adminListStockService.js') }}"></script>
+
+<script type="text/javascript">
+    const adminControllerUrl = '{{ adminControllerUrl | raw }}';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded');
+        initAdminStockServiceTable();
+    });    
+</script>

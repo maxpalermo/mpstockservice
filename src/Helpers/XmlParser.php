@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -36,23 +37,53 @@ class XmlParser
     private $xml;
 
     /**
+     * @var string Il nome del file XML
+     */
+    private $filename;
+
+    /**
+     * @var string Il numero del documento
+     */
+    private $number;
+
+    /**
+     * @var string La data del documento
+     */
+    private $date;
+
+    /**
      * Costruttore
      *
+     * @param string $filename Il nome del file XML
      * @param string $xmlContent Il contenuto del file XML o il percorso al file
      * @param bool $isFile Indica se $xmlContent è un percorso file o una stringa XML
      */
-    public function __construct($xmlContent, $isFile = false)
+    public function __construct($filename, $xmlContent, $isFile = false)
     {
         if ($isFile) {
             if (!file_exists($xmlContent)) {
                 throw new \Exception("Il file XML non esiste: $xmlContent");
             }
+            $this->filename = $filename;
             $this->xmlContent = file_get_contents($xmlContent);
         } else {
             $this->xmlContent = $xmlContent;
         }
 
         $this->loadXml();
+    }
+
+    private function getNumberDocument()
+    {
+        // Il formato del file è [C|S](<numero>-<data>)<ora>.XML
+        // serve Numero documento
+        $pattern = '/[C|S]\((\d+)-(\d+)\)(\d+)\.XML/';
+        preg_match($pattern, $this->filename, $matches);
+        if (empty($matches)) {
+            return 0;
+        }
+
+        return $matches[1];
     }
 
     /**
@@ -63,6 +94,8 @@ class XmlParser
     private function loadXml()
     {
         libxml_use_internal_errors(true);
+        $this->number = $this->getNumberDocument();
+        $this->date = date('Y-m-d H:i:s');
         $this->xml = simplexml_load_string($this->xmlContent);
 
         if ($this->xml === false) {
@@ -82,25 +115,85 @@ class XmlParser
      *
      * @return array Array di dati estratti con ean13, reference e qty
      */
-    public function extractRowData()
+    public function extractRowData($movement = 'load', $force_update = false)
     {
         $result = [];
+        $multiplier = 1;
+        if ($movement == 'unload') {
+            $multiplier = -1;
+        }
 
         if (!isset($this->xml->rows->row)) {
             return $result;
         }
 
         foreach ($this->xml->rows->row as $row) {
-            $ean13 = (string) $row->ean13;
-            $reference = (string) $row->reference;
-            $qty = (int) $row->qty;
+            $ean13Node = $row->xpath('./ean13');
+            $referenceNode = $row->xpath('./reference');
+            $qtyNode = $row->xpath('./qty');
 
-            $result[] = [
+            $ean13 = isset($ean13Node[0]) ? (string) $ean13Node[0] : '';
+            $reference = isset($referenceNode[0]) ? (string) $referenceNode[0] : '';
+            $qty = isset($qtyNode[0]) ? (int) ((string) $qtyNode[0]) : 0;
+
+            $id_product = 0;
+            $id_product_attribute = $this->getIdProductAttributeByEan13($ean13, $id_product);
+
+            $item = [
+                'id_product' => $id_product,
+                'id_product_attribute' => $id_product_attribute,
                 'ean13' => $ean13,
                 'reference' => $reference,
-                'quantity' => $qty,
+                'movement' => abs($qty) * $multiplier,
+                'skipped' => false,
+                'imported' => false,
+                'force_update' => $force_update,
             ];
+
+            if (!$item['id_product_attribute']) {
+                $item['skipped'] = true;
+            }
+
+            $isStockService = $this->isStockService($id_product);
+            $item['is_stock_service'] = $isStockService;
+
+            if ($force_update && !$isStockService) {
+                $result[] = $item;
+            } elseif ($isStockService) {
+                $result[] = $item;
+            }
         }
+
+        return $result;
+    }
+
+    private function getIdProductAttributeByEan13($ean13, &$id_product)
+    {
+        $id_product = 0;
+        $db = \Db::getInstance();
+        $query = new \DbQuery();
+        $query
+            ->select('id_product, id_product_attribute')
+            ->from('product_attribute')
+            ->where('ean13 = "' . $ean13 . '"');
+        $result = $db->getRow($query);
+        if ($result) {
+            $id_product = $result['id_product'];
+            return $result['id_product_attribute'];
+        }
+
+        return false;
+    }
+
+    private function isStockService($id_product)
+    {
+        $db = \Db::getInstance();
+        $query = new \DbQuery();
+        $query
+            ->select('is_stock_service')
+            ->from('product_stock_service_check')
+            ->where('id_product = ' . (int) $id_product);
+        $result = (int) $db->getValue($query);
 
         return $result;
     }
@@ -130,12 +223,14 @@ class XmlParser
      *
      * @return array Array con tutti i dati estratti
      */
-    public function getAllData()
+    public function parse($movement = 'load', $force_update = false)
     {
         return [
             'movement_type' => $this->getMovementType(),
+            'movement_number' => $this->getNumberDocument(),
             'movement_date' => $this->getMovementDate(),
-            'rows' => $this->extractRowData(),
+            'id_supplier' => 0,
+            'rows' => $this->extractRowData($movement, $force_update),
         ];
     }
 }

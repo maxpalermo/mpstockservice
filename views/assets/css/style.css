@@ -1,0 +1,132 @@
+.d-flex {
+    display: flex;
+}
+
+.justify-content-center {
+    justify-content: center;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.gap-2 {
+    gap: 1rem;
+}
+
+.gap-4 {
+    gap: 2rem;
+}
+
+.grow-1 {
+    flex-grow: 1 !important;
+}
+
+.fixed-table-container,
+.fixed-table-header,
+.fixed-table-body,
+.fixed-table-footer {
+    overflow-x: none !important;
+    overflow-y: none !important;
+    height: 100% !important;
+}
+
+.mr-4 {
+    margin-right: 2rem;
+}
+
+.mt-4 {
+    margin-top: 2rem;
+}
+
+.mb-4 {
+    margin-bottom: 4rem;
+}
+
+.table-hover tbody tr:hover {
+    color: inherit;
+    background-color: #d0d0d0;
+    cursor: pointer;
+}
+
+dialog::backdrop {
+    backdrop-filter: blur(5px);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+
+dialog {
+    width: 80%;
+    height: 80%;
+    margin: auto;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 1rem;
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    z-index: 1000;
+}
+
+dialog[open] {
+    display: flex;
+}
+
+dialog button.close {
+    position: absolute;
+    top: 2.5rem;
+    right: 2.5rem;
+    font-size: 1rem;
+    z-index: 1001;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+dialog .modal-header {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1001;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #eee;
+}
+
+dialog .modal-body {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 1rem 1.25rem;
+}
+
+dialog .modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    z-index: 1001;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+dialog button.close:hover {
+    background-color: #ccc;
+}
+
+dialog button.close:active {
+    background-color: #ccc;
+}
+
+dialog button.close:focus {
+    outline: none;
+}

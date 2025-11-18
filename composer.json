@@ -8,19 +8,15 @@
         }
     ],
     "require": {
-        "php": ">=7.1.0",
-        "prestashop/prestashop-webservice-lib": "dev-master"
+        "php": ">=8.0.0"
     },
     "autoload": {
         "psr-4": {
-            "MpSoft\\MpStockService\\": "src/",
-            "MpSoft\\MpStockService\\WebServices\\": "vendor/prestashop/"
+            "MpSoft\\MpStockService\\": "src/"
         },
         "classmap": [],
         "exclude-from-classmap": [],
-        "files": [
-            "vendor/prestashop/prestashop-webservice-lib/PSWebServiceLibrary.php"
-        ]
+        "files": []
     },
     "config": {
         "preferred-install": "dist",

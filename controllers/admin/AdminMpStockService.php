@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -21,7 +22,11 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+use MpSoft\MpStockService\Helpers\GetTwigEnvironment;
+use MpSoft\MpStockService\Helpers\XmlParser;
 use MpSoft\MpStockService\Hooks\MpStockServiceHookController;
+use MpSoft\MpStockService\Models\ModelMpStockService;
+use MpSoft\MpStockService\Models\ModelMpStockServiceCheck;
 
 class AdminMpStockServiceController extends ModuleAdminController
 {
@@ -39,91 +44,99 @@ class AdminMpStockServiceController extends ModuleAdminController
         $this->id_shop = (int) $this->context->shop->id;
         $this->id_employee = (int) $this->context->employee->id;
         $this->ajax_controller = Context::getContext()->link->getAdminLink('AdminMpStockService');
+
+        if (Tools::isSubmit('ajax') && Tools::isSubmit('action')) {
+            $action = 'ajaxProcess' . ucfirst(Tools::getValue('action'));
+            if (method_exists($this, $action)) {
+                $this->response($this->$action());
+            }
+        }
     }
 
-    protected function response($params)
+    protected function response($params, $code = 200)
     {
         header('Content-Type: application/json; charset=utf-8');
+        http_response_code($code);
         exit(json_encode($params));
     }
 
     public function init()
     {
-        $this->initTable();
-        $this->initFieldsList();
         parent::init();
     }
 
-    public function initTable()
+    public function ajaxProcessGetStockServiceList()
     {
-        $this->_pagination = [20, 50, 100, 200, 500, 1000];
-        $this->table = ModelMpStockService::$definition['table'];
-        $this->identifier = 'id_product';
-        $this->list_id = $this->table;
-        $this->_defaultOrderBy = $this->identifier;
-        $this->_defaultOrderWay = 'ASC';
-        $this->bulk_actions = [
-            'reset' => [
-                'text' => $this->module->l('Reset Quantities', $this->controller_name),
-                'icon' => 'icon-trash',
-                'confirm' => $this->module->l('Reset selected Quantities?', $this->controller_name),
-            ],
-        ];
-        $this->_select = 'p.reference, pl.name, sum(a.quantity) as `total_quantities`, min(date) as `date`';
-        $this->_join = 'INNER JOIN ' . _DB_PREFIX_ . 'product p on (a.id_product=p.id_product) '
-            . 'INNER JOIN ' . _DB_PREFIX_ . 'product_lang pl on (a.id_product=pl.id_product AND pl.id_lang=' . $this->id_lang . ') ';
-        $this->_group = 'GROUP BY a.id_product';
-        $this->_having = 'count(a.quantity) > 0';
-        $this->_where = ' AND a.quantity > 0';
-    }
+        $offset = Tools::getValue('offset', 0);
+        $limit = Tools::getValue('limit', 20);
+        $search = Tools::getValue('search', '');
+        $sort = Tools::getValue('sort', 'a.id_product');
+        $order = Tools::getValue('order', 'DESC');
 
-    protected function initFieldsList()
-    {
-        $this->fields_list = [
-            'id_product' => [
-                'title' => $this->module->l('Id Product', $this->controller_name),
-                'align' => 'text-right',
-                'width' => 'auto',
-                'class' => 'fixed-width-sm',
-                'float' => true,
-                'filter_key' => 'a!id_product',
-            ],
-            'reference' => [
-                'title' => $this->module->l('Reference', $this->controller_name),
-                'align' => 'left',
-                'width' => 'auto',
-                'float' => true,
-                'filter_key' => 'p!reference',
-            ],
-            'name' => [
-                'title' => $this->module->l('Product name', $this->controller_name),
-                'align' => 'left',
-                'width' => 'auto',
-                'filter_key' => 'pl!name',
-            ],
-            'total_quantities' => [
-                'type' => 'text',
-                'title' => $this->module->l('Total Qty', $this->controller_name),
-                'align' => 'text-right',
-                'class' => 'fixed-width-sm',
-                'width' => 'auto',
-                'search' => false,
-            ],
-            'number' => [
-                'title' => $this->module->l('Document', $this->controller_name),
-                'align' => 'text-right',
-                'class' => 'fixed-width-lg',
-                'width' => 'auto',
-                'filter_key' => 'a!number',
-                'float' => true,
-            ],
-            'date' => [
-                'title' => $this->module->l('Date document', $this->controller_name),
-                'type' => 'date',
-                'align' => 'text-center',
-                'width' => 'auto',
-                'filter_key' => 'a!date',
-            ],
+        $db = Db::getInstance();
+        $query = new DbQuery();
+
+        $query
+            ->select('i.id_image')
+            ->select('p.id_product')
+            ->select('p.reference')
+            ->select('pl.name as product_name')
+            ->select('sum(ss.quantity) as `quantity`')
+            ->select('a.id_employee')
+            ->select('a.is_stock_service')
+            ->select('a.date_add')
+            ->select('a.date_upd')
+            ->from(ModelMpStockServiceCheck::$definition['table'], 'a')
+            ->innerJoin(ModelMpStockService::$definition['table'], 'ss', 'ss.id_product = a.id_product')
+            ->innerJoin('product', 'p', 'p.id_product = a.id_product')
+            ->innerJoin('product_lang', 'pl', 'pl.id_product = p.id_product AND pl.id_lang = ' . (int) $this->context->language->id)
+            ->leftJoin('image', 'i', 'i.id_product = p.id_product and i.cover = 1')
+            ->groupBy('p.id_product')
+            ->orderBy("{$sort} {$order}")
+            ->limit($limit, $offset);
+
+        $queryCount = new DbQuery();
+        $queryCount
+            ->select('count(a.id_product) as total')
+            ->from(ModelMpStockServiceCheck::$definition['table'], 'a');
+
+        if ($search) {
+            $search = pSQL($search);
+
+            $query->where(
+                "
+                    p.reference LIKE '%{$search}%' OR
+                    pl.name LIKE '%{$search}%'
+                "
+            );
+
+            $queryCount->leftJoin('product', 'p', 'p.id_product = a.id_product and a.id_product is not null');
+            $queryCount->leftJoin('product_lang', 'pl', 'p.id_product = pl.id_product and pl.id_lang=' . (int) $this->context->language->id);
+            $queryCount->where(
+                "
+                    p.reference LIKE '%{$search}%' OR
+                    pl.name LIKE '%{$search}%'
+                "
+            );
+        }
+
+        $total = $db->getValue($queryCount);
+
+        $result = $db->executeS($query);
+        if (!$result) {
+            $result = [];
+        }
+
+        foreach ($result as &$row) {
+            $row['image'] = $row['id_image'] ? Context::getContext()->link->getImageLink('product', $row['id_image'], 'small_default') : Context::getContext()->link->getImageLink('product', $row['id_image'], 'small_default');
+        }
+
+        return [
+            'rows' => $result,
+            'total' => $total,
+            'totalNotFiltered' => $total,
+            'offset' => $offset,
+            'limit' => $limit,
         ];
     }
 
@@ -131,19 +144,18 @@ class AdminMpStockServiceController extends ModuleAdminController
     {
         parent::initPageHeaderToolbar();
         $this->toolbar_title = $this->module->l('Stock Services Products', $this->controller_name);
-        if ($this->display == 'edit' || $this->display == 'view') {
-            $this->page_header_toolbar_btn['go_back'] = [
-                'href' => $this->context->link->getAdminLink($this->controller_name),
-                'desc' => $this->module->l('Back to list', $this->controller_name),
-                'imgclass' => 'back',
-            ];
-        } else {
-            $this->page_header_toolbar_btn['orphans'] = [
-                'href' => $this->context->link->getAdminLink($this->controller_name) . '&action=remove_orphans',
-                'desc' => $this->module->l('Remove Orphans', $this->controller_name),
-                'imgclass' => 'trash',
-            ];
-        }
+
+        $this->page_header_toolbar_btn['orphans'] = [
+            'href' => $this->context->link->getAdminLink($this->controller_name) . '&action=remove_orphans',
+            'desc' => $this->module->l('Remove Orphans', $this->controller_name),
+            'imgclass' => 'delete',
+        ];
+
+        $this->page_header_toolbar_btn['import'] = [
+            'href' => 'javascript:showImportPanel();',
+            'desc' => $this->module->l('Importa', $this->controller_name),
+            'imgclass' => 'import',
+        ];
     }
 
     public function renderTplForm()
@@ -154,6 +166,168 @@ class AdminMpStockServiceController extends ModuleAdminController
         $controller->setIdProduct($id_product);
 
         return $controller->display(true);
+    }
+
+    public function ajaxProcessGetStockServiceByProductId()
+    {
+        $id_product = (int) Tools::getValue('id_product');
+        $rows = ModelMpStockService::getStockServiceByProduct($id_product);
+
+        if (!$rows) {
+            $rows = [];
+        }
+
+        return $rows;
+    }
+
+    public function ajaxProcessGetTableStockServiceByProductId()
+    {
+        $id_product = (int) Tools::getValue('id_product');
+        $rows = ModelMpStockService::getStockServiceByProduct($id_product);
+
+        if (!$rows) {
+            $rows = [];
+        }
+
+        $twig = new GetTwigEnvironment($this->module->name);
+        $twig->load('@ModuleTwig/admin/detailsStockServiceRow.html.twig');
+        $table = $twig->render([
+            'rows' => $rows,
+        ]);
+
+        return [
+            'table' => $table,
+        ];
+    }
+
+    public function ajaxProcessSaveStockService()
+    {
+        $rows = json_decode(Tools::getValue('rows'), true);
+        $id_product = (int) Tools::getValue('id_product');
+        $is_stock_service = (int) Tools::getValue('is_stock_service');
+        $errors = [];
+
+        foreach ($rows as $row) {
+            $model = new ModelMpStockService($row['id_product_attribute']);
+
+            $model->id_product = $row['id_product'];
+            $model->id_product_attribute = $row['id_product_attribute'];
+            $model->quantity = (int) $row['quantity_after'];
+            $model->id_employee = $this->context->employee->id;
+            $model->id_supplier = (int) $row['id_supplier'];
+            $model->number = $row['number'];
+            $model->date = $row['date'];
+            $model->save();
+        }
+
+        return [
+            'success' => true,
+            'message' => $this->module->l('Stock service salvato', $this->controller_name),
+        ];
+    }
+
+    public function ajaxProcessImportStockService()
+    {
+        $file = Tools::fileAttachment('file', 0);
+        $movement = Tools::getValue('movement');
+        $force_update = (int) Tools::getValue('force_update');
+
+        $xmlParser = new XmlParser($file['name'], $file['tmp_name'], 1);
+        $data = $xmlParser->parse($movement, $force_update);
+
+        foreach ($data['rows'] as &$row) {
+            $res = false;
+            if ($row['skipped'] || !$row['is_stock_service']) {
+                continue;
+            }
+            $model = new ModelMpStockService($row['id_product_attribute']);
+            if ($model) {
+                $model->id_product = (int) $row['id_product'];
+                $row['quantity_before'] = (int) $model->quantity;
+                $model->quantity = $row['quantity_before'] + $row['movement'];
+                $row['quantity_after'] = $model->quantity;
+                $model->number = $data['movement_number'];
+                $model->date = $data['movement_date'];
+                $model->id_employee = $this->context->employee->id;
+
+                $res = $model->save();
+            } else {
+                $res = false;
+            }
+
+            $row['imported'] = $res;
+        }
+
+        return $this->formatTableResultData($data);
+    }
+
+    private function formatTableResultData($data)
+    {
+        $rows = $data['rows'];
+
+        foreach ($rows as &$row) {
+            $productInfo = $this->getProductInfo($row['id_product'], $row['id_product_attribute']);
+            $row = array_merge($row, $productInfo);
+        }
+
+        $data['rows'] = $rows;
+
+        return $data;
+    }
+
+    private function getProductInfo($id_product, $id_product_attribute)
+    {
+        $id_lang = (int) Context::getContext()->language->id;
+        $product = new Product($id_product, false, $id_lang);
+        $productAttribute = new Combination($id_product_attribute, $id_lang);
+
+        $combination = $productAttribute->getAttributesName($id_lang);
+
+        $combination_string = implode(', ', array_map(function ($value) {
+            return $value['name'];
+        }, $combination));
+
+        $cover = Image::getCover($id_product);
+        $image = new Image($cover['id_image'], $id_lang);
+        $baseUrl = $this->context->link->getBaseLink();
+        $imagePath = $baseUrl . 'img/p/' . $image->getExistingImgPath() . '-small_default.' . $image->image_format;
+
+        return [
+            'image_path' => $imagePath,
+            'product_name' => $product->name,
+            'combination' => $combination_string,
+            'ean13' => $productAttribute->ean13,
+            'reference' => $productAttribute->reference,
+        ];
+    }
+
+    public function ajaxProcessSwitchStockService()
+    {
+        $id_product = (int) Tools::getValue('id_product');
+        $is_stock_service = (int) Tools::getValue('switch_stock_service');
+        $id_employee = (int) $this->context->employee->id;
+
+        $model = new ModelMpStockServiceCheck($id_product);
+        $model->is_stock_service = $is_stock_service;
+        $model->id_employee = $id_employee;
+        $result = $model->save();
+
+        if ($result && $is_stock_service) {
+            $message = $this->module->l('Stock service abilitato', $this->controller_name);
+            $success = true;
+        } elseif ($result && !$is_stock_service) {
+            $message = $this->module->l('Stock service disabilitato', $this->controller_name);
+            $success = true;
+        } else {
+            $message = $this->module->l('Error', $this->controller_name);
+            $success = false;
+        }
+
+        return [
+            'success' => $success,
+            'totStockRows' => Db::getInstance()->Affected_Rows(),
+            'message' => $message,
+        ];
     }
 
     public function ajaxProcessSubmitStockService()
@@ -180,7 +354,7 @@ class AdminMpStockServiceController extends ModuleAdminController
             }
 
             $this->response([
-                'result' => $res,
+                'success' => $res,
                 'tableOut' => $error,
                 'totStockRows' => Db::getInstance()->numRows(),
                 'errors' => '',
@@ -341,13 +515,48 @@ class AdminMpStockServiceController extends ModuleAdminController
 
     public function initContent()
     {
-        if ($this->display == 'edit') {
-            $this->content = $this->renderTplForm();
-            $this->fields_list = [];
-            $this->fields_form = [];
+        $twig = new GetTwigEnvironment($this->module->name);
+        $twig->load('@ModuleTwig/admin/AdminListStockService.html.twig');
+
+        $this->content = $twig->render([
+            'adminControllerUrl' => $this->context->link->getAdminLink('AdminMpStockService'),
+        ]);
+
+        parent::initContent();
+    }
+
+    public function ajaxProcessEnableStockService()
+    {
+        $id_product = (int) Tools::getValue('id_product');
+        return $this->toggleStockService($id_product, 1);
+    }
+
+    public function ajaxProcessDisableStockService()
+    {
+        $id_product = (int) Tools::getValue('id_product');
+        return $this->toggleStockService($id_product, 0);
+    }
+
+    public function toggleStockService($id_product, $value)
+    {
+        $db = Db::getInstance();
+        $result = $db->update(
+            ModelMpStockServiceCheck::$definition['table'],
+            ['is_stock_service' => (int) $value],
+            'id_product=' . (int) $id_product
+        );
+
+        if ($result && $db->Affected_Rows()) {
+            return [
+                'result' => true,
+                'id_product' => $id_product,
+            ];
         }
 
-        return parent::initContent();
+        return [
+            'result' => false,
+            'id_product' => $id_product,
+        ];
     }
 
     public function ajaxProcessGetCheckProductQuantity()
@@ -355,7 +564,8 @@ class AdminMpStockServiceController extends ModuleAdminController
         $id_product = (int) Tools::getValue('id_product');
         $db = Db::getInstance();
         $sql = new DbQuery();
-        $sql->select('e.firstname')
+        $sql
+            ->select('e.firstname')
             ->select('e.lastname')
             ->select('a.date_upd')
             ->select('a.is_stock_service')
@@ -364,7 +574,7 @@ class AdminMpStockServiceController extends ModuleAdminController
             ->where('a.id_product=' . (int) $id_product);
         $row = $db->getRow($sql);
         if ($row) {
-            die (
+            die(
                 json_encode(
                     [
                         'employee' => Tools::ucwords($row['firstname'] . ' ' . $row['lastname']),
@@ -388,8 +598,8 @@ class AdminMpStockServiceController extends ModuleAdminController
         $employee_name = Tools::ucWords($employee->firstname . ' ' . $employee->lastname);
         $sql = sprintf(
             'INSERT INTO %s (id_product, id_employee, is_stock_service, date_add, date_upd) '
-            . "VALUES (%d, %d, %d, '%s', '%s') "
-            . "ON DUPLICATE KEY UPDATE is_stock_service=%d, date_upd='%s', id_employee=%d",
+                . "VALUES (%d, %d, %d, '%s', '%s') "
+                . "ON DUPLICATE KEY UPDATE is_stock_service=%d, date_upd='%s', id_employee=%d",
             _DB_PREFIX_ . ModelMpStockServiceCheck::$definition['table'],
             $id_product,
             $id_employee,
@@ -501,7 +711,8 @@ class AdminMpStockServiceController extends ModuleAdminController
     {
         $db = Db::getInstance();
         $sql = new DbQuery();
-        $sql->select('id_product')
+        $sql
+            ->select('id_product')
             ->from('product_attribute')
             ->where('id_product_attribute=' . (int) $id_product_attribute);
         $id_product = (int) $db->getValue($sql);
@@ -562,13 +773,13 @@ class AdminMpStockServiceController extends ModuleAdminController
         $helper->_defaultOrderBy = $helper->identifier;
         $helper->_defaultOrderWay = 'ASC';
         $helper->className = 'Product';
-        $helper->shopLinkType = ''; // 'shop' | 'group_shop'
+        $helper->shopLinkType = '';  // 'shop' | 'group_shop'
         $helper->shopLink = '';
         $helper->no_link = true;
         $helper->simple_header = true;
         $helper->show_toolbar = false;
         $helper->show_toolbar_options = false;
-        $helper->lang = false; // join lang table if true
+        $helper->lang = false;  // join lang table if true
         $helper->lite_display = true;
         $helper->show_page_header_toolbar = false;
         $helper->page_header_toolbar_title = $this->module->l('Banner Products', $this->controller_name);
@@ -681,13 +892,13 @@ class AdminMpStockServiceController extends ModuleAdminController
 
     public function callbackUpdateQty($value)
     {
-        if ((int) $value < 0 ) {
+        if ((int) $value < 0) {
             return $this->callbackUnloadQty($value);
         }
-        if ((int) $value == 0 ) {
+        if ((int) $value == 0) {
             return $this->callbackNoQty($value);
         }
-        if ((int) $value > 0 ) {
+        if ((int) $value > 0) {
             return $this->callbackLoadQty($value);
         }
     }
@@ -804,7 +1015,8 @@ class AdminMpStockServiceController extends ModuleAdminController
     public function processRemoveOrphans()
     {
         $subSql = new DbQuery();
-        $subSql->select('id_product_attribute')
+        $subSql
+            ->select('id_product_attribute')
             ->from('product_attribute')
             ->orderBy('id_product_attribute');
 
@@ -833,7 +1045,7 @@ class AdminMpStockServiceController extends ModuleAdminController
             $id_pa = $barcode['id_product_attribute'];
             $ean13 = $barcode['ean13'];
 
-            $sql = 'update ' . _DB_PREFIX_ . 'product_attribute set ean13 = \'' . $ean13 . '\' where id_product_attribute = ' . (int) $id_pa;
+            $sql = 'update ' . _DB_PREFIX_ . "product_attribute set ean13 = '" . $ean13 . "' where id_product_attribute = " . (int) $id_pa;
             if (!$db->execute($sql)) {
                 $res = false;
                 $errors[] = $db->getMsgError();
