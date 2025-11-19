@@ -1,50 +1,3 @@
-function bindEnableDisableStockService() {
-    const btnEnableStockService = document.querySelectorAll("button[name=btn-enable-stock-service]");
-    const btnDisableStockService = document.querySelectorAll("button[name=btn-disable-stock-service]");
-
-    btnEnableStockService.forEach((btn) => {
-        btn.addEventListener("click", async () => {
-            const idProduct = btn.getAttribute("data-id");
-            await enableStockService(idProduct);
-            refreshAdminStockServiceTable();
-        });
-    });
-
-    btnDisableStockService.forEach((btn) => {
-        btn.addEventListener("click", async () => {
-            const idProduct = btn.getAttribute("data-id");
-            await disableStockService(idProduct);
-            refreshAdminStockServiceTable();
-        });
-    });
-}
-
-async function enableStockService(idProduct) {
-    const response = await fetch(adminControllerUrl, {
-        method: "POST",
-        body: new URLSearchParams({
-            action: "enableStockService",
-            ajax: 1,
-            id_product: idProduct,
-        }),
-    });
-    const data = await response.json();
-    return data;
-}
-
-async function disableStockService(idProduct) {
-    const response = await fetch(adminControllerUrl, {
-        method: "POST",
-        body: new URLSearchParams({
-            action: "disableStockService",
-            ajax: 1,
-            id_product: idProduct,
-        }),
-    });
-    const data = await response.json();
-    return data;
-}
-
 function refreshAdminStockServiceTable() {
     $("#table-list-stock-service").bootstrapTable("refresh");
 }
@@ -140,7 +93,8 @@ function initAdminStockServiceTable() {
         onPostBody: function () {
             console.log("Bootstrap Table initialized successfully");
             bindActionButtons();
-            bindEnableDisableStockService();
+            setBootstrapTableIcons();
+            new bindEnableDisableStockServiceList(adminControllerUrl);
 
             // Normalizza il markup del dropdown page-size a Bootstrap 3
             $(".fixed-table-pagination .btn-group.dropdown").each(function () {
@@ -208,6 +162,14 @@ function initAdminStockServiceTable() {
                 title: "Riferimento",
                 align: "left",
                 sortable: true,
+                formatter: function (value, row, index) {
+                    return `
+                        <a href="${row.url}" target="_blank">
+                            <span style="font-family:'monospace';">(${row.id_product})</span>
+                            <span>${value}</span>
+                        </a>
+                        `;
+                },
             },
             {
                 field: "product_name",
@@ -220,6 +182,17 @@ function initAdminStockServiceTable() {
                 title: "Quantità",
                 align: "center",
                 sortable: true,
+                formatter: function (value, row, index) {
+                    if (row.is_stock_service == 0) {
+                        return `<span class="badge badge-danger" style="font-family:'monospace';font-size: 1.0rem;">${row.quantity}</span>`;
+                    } else {
+                        if (row.quantity > 0) {
+                            return `<span class="badge badge-success" style="font-family:'monospace';font-size: 1.0rem;">${row.quantity}</span>`;
+                        } else {
+                            return `<span class="badge badge-warning" style="font-family:'monospace';font-size: 1.0rem;">${row.quantity}</span>`;
+                        }
+                    }
+                },
             },
             {
                 field: "is_stock_service",

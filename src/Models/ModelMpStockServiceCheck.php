@@ -32,7 +32,6 @@ use \ObjectModel;
 
 class ModelMpStockServiceCheck extends ObjectModel
 {
-    public $id_product;
     public $id_employee;
     public $is_stock_service;
     public $date_add;
@@ -44,11 +43,6 @@ class ModelMpStockServiceCheck extends ObjectModel
         'multilang' => false,
         'multishop' => false,
         'fields' => [
-            'id_product' => [
-                'type' => self::TYPE_INT,
-                'validate' => 'isUnsignedId',
-                'required' => true,
-            ],
             'id_employee' => [
                 'type' => self::TYPE_INT,
                 'validate' => 'isUnsignedId',

@@ -128,6 +128,7 @@ class AdminMpStockServiceController extends ModuleAdminController
         }
 
         foreach ($result as &$row) {
+            $row['url'] = Context::getContext()->link->getAdminLink('AdminProducts', true, ['id_product' => $row['id_product'], 'updateproduct' => true]);
             $row['image'] = $row['id_image'] ? Context::getContext()->link->getImageLink('product', $row['id_image'], 'small_default') : Context::getContext()->link->getImageLink('product', $row['id_image'], 'small_default');
         }
 
@@ -147,7 +148,7 @@ class AdminMpStockServiceController extends ModuleAdminController
 
         $this->page_header_toolbar_btn['orphans'] = [
             'href' => $this->context->link->getAdminLink($this->controller_name) . '&action=remove_orphans',
-            'desc' => $this->module->l('Remove Orphans', $this->controller_name),
+            'desc' => $this->module->l('Rimuovi prodotti orfani', $this->controller_name),
             'imgclass' => 'delete',
         ];
 
@@ -237,11 +238,19 @@ class AdminMpStockServiceController extends ModuleAdminController
 
         foreach ($data['rows'] as &$row) {
             $res = false;
-            if ($row['skipped'] || !$row['is_stock_service']) {
+            if ($row['skipped']) {
+                $row['movement'] = 0;
+                $row['quantity_before'] = 0;
+                $row['quantity_after'] = 0;
                 continue;
             }
-            $model = new ModelMpStockService($row['id_product_attribute']);
-            if ($model) {
+
+            if ($row['is_stock_service']) {
+                $model = new ModelMpStockService($row['id_product_attribute']);
+                if (!Validate::isLoadedObject($model)) {
+                    $model->force_id = true;
+                    $model->id = (int) $row['id_product_attribute'];
+                }
                 $model->id_product = (int) $row['id_product'];
                 $row['quantity_before'] = (int) $model->quantity;
                 $model->quantity = $row['quantity_before'] + $row['movement'];
@@ -252,7 +261,37 @@ class AdminMpStockServiceController extends ModuleAdminController
 
                 $res = $model->save();
             } else {
-                $res = false;
+                $model = new ModelMpStockServiceCheck($row['id_product']);
+                $model->id_employee = (int) $this->context->employee->id;
+                $model->is_stock_service = true;
+
+                if (!Validate::isLoadedObject($model)) {
+                    $model->force_id = true;
+                    $model->id = (int) $row['id_product'];
+                    $res = $model->add();
+                } else {
+                    $res = $model->update();
+                }
+
+                if ($res) {
+                    $modelSS = new ModelMpStockService($row['id_product_attribute']);
+
+                    $modelSS->id_product = (int) $row['id_product'];
+                    $modelSS->id_supplier = 0;
+                    $modelSS->number = $data['movement_number'];
+                    $modelSS->date = $data['movement_date'];
+                    $modelSS->quantity = (int) $row['movement'];
+                    $row['quantity_before'] = 0;
+                    $row['quantity_after'] = $modelSS->quantity;
+
+                    if (!Validate::isLoadedObject($modelSS)) {
+                        $modelSS->force_id = true;
+                        $modelSS->id = (int) $row['id_product_attribute'];
+                        $res = $modelSS->add();
+                    } else {
+                        $res = $modelSS->update();
+                    }
+                }
             }
 
             $row['imported'] = $res;
@@ -1014,19 +1053,50 @@ class AdminMpStockServiceController extends ModuleAdminController
 
     public function processRemoveOrphans()
     {
-        $subSql = new DbQuery();
-        $subSql
-            ->select('id_product_attribute')
-            ->from('product_attribute')
-            ->orderBy('id_product_attribute');
+        $pfx = _DB_PREFIX_;
+        $table_check = $pfx . ModelMpStockServiceCheck::$definition['table'];
+        $table_comb = $pfx . ModelMpStockService::$definition['table'];
+        $query = "
+            DELETE FROM {$table_comb}
+            WHERE id_product_attribute NOT IN (
+                SELECT id_product_attribute
+                FROM {$pfx}product_attribute
+            )
+        ";
 
-        $res = Db::getInstance()->delete(
-            ModelMpStockService::$definition['table'],
-            'id_product_attribute not in (' . $subSql->build() . ')'
-        );
+        $res = Db::getInstance()->execute($query);
 
         if ($res) {
-            $this->confirmations[] = $this->module->l('Orphans removed.', $this->controller_name);
+            $affected = Db::getInstance()->Affected_Rows();
+            $this->confirmations[] =
+                sprintf(
+                    $this->module->l('%s combinazioni rimosse.', $this->controller_name),
+                    $affected
+                );
+        } else {
+            $this->errors[] = sprintf(
+                $this->module->l('Error %s'),
+                Db::getInstance()->getMsgError()
+            );
+        }
+
+        $query = "
+            DELETE FROM {$table_check}
+            WHERE id_product NOT IN (
+                SELECT id_product
+                FROM {$pfx}product
+            )
+        ";
+
+        $res = Db::getInstance()->execute($query);
+
+        if ($res) {
+            $affected = Db::getInstance()->Affected_Rows();
+            $this->confirmations[] =
+                sprintf(
+                    $this->module->l('%s prodotti rimossi.', $this->controller_name),
+                    $affected
+                );
         } else {
             $this->errors[] = sprintf(
                 $this->module->l('Error %s'),

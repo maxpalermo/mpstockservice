@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="{{ asset('css/style.css') }}">
 <link rel="stylesheet" href="{{ asset('js/bs-table/bootstrap-table.min.css') }}">
 <style>
     .d-flex {
@@ -40,6 +41,7 @@
             <div class="panel-heading">
                 Prodotti in stock service
             </div>
+            <div class="panel-body" id="alert-message-container"></div>
             <div class="panel-body">
                 <table id="table-list-stock-service" data-toggle="table" data-url=""></table>
             </div>
@@ -50,15 +52,27 @@
     </section>
 </div>
 
+{% include 'hooks/importResults.html.twig' %}
+
 <script src="{{ asset('js/bs-table/bootstrap-table.min.js') }}"></script>
 <script src="{{ asset('js/bs-table/locale/bootstrap-table-it-IT.min.js') }}"></script>
+<script src="{{ asset('js/callback.js') }}"></script>
 <script src="{{ asset('js/adminListStockService.js') }}"></script>
+<script src="{{ asset('js/alertMessage.js') }}"></script>
+<script src="{{ asset('js/importResults.js') }}"></script>
+<script src="{{ asset('js/setBootstraptableIcons.js') }}"></script>
+<script src="{{ asset('js/bindEnableDisableStockServiceList.js') }}"></script>
+<script src="{{ asset('js/bindStockServiceImport.js') }}"></script>
+
 
 <script type="text/javascript">
     const adminControllerUrl = '{{ adminControllerUrl | raw }}';
+    const parentAlertContainer = document.getElementById('alert-message-container');
+    const alertMessage = new alertMessageStockService(parentAlertContainer);
 
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOMContentLoaded');
+        const bindStockServiceImportClass = new bindStockServiceImport(adminControllerUrl, "fileUpload", "fakeFile", "switch_force_stock_service", "btnSelectFile", "btnLoadFile", "btnUnloadFile",showImportResults);
         initAdminStockServiceTable();
     });    
 </script>

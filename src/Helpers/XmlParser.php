@@ -139,6 +139,10 @@ class XmlParser
             $id_product = 0;
             $id_product_attribute = $this->getIdProductAttributeByEan13($ean13, $id_product);
 
+            if (!$id_product_attribute) {
+                continue;
+            }
+
             $item = [
                 'id_product' => $id_product,
                 'id_product_attribute' => $id_product_attribute,
@@ -160,6 +164,9 @@ class XmlParser
             if ($force_update && !$isStockService) {
                 $result[] = $item;
             } elseif ($isStockService) {
+                $result[] = $item;
+            } elseif (!$isStockService) {
+                $item['skipped'] = true;
                 $result[] = $item;
             }
         }

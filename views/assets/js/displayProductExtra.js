@@ -93,107 +93,10 @@ function showSuppliersSelect(idProductAttribute, value, name) {
     return formGroup;
 }
 
-async function showImportResults(movement = "load") {
-    const file = document.getElementById("fileUpload").files[0] || null;
-    if (!file) {
-        showAlertMessageStockService("Nessun file selezionato", "alert-danger");
-        return false;
-    }
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("movement", movement);
-    formData.append("force_update", document.getElementById("switch_force_stock_service_on").checked);
-
-    let data;
-    try {
-        const response = await fetch(`${adminControllerUrl}&action=importStockService&ajax=1`, {
-            method: "POST",
-            body: formData,
-        });
-        if (!response.ok) {
-            showAlertMessageStockService("Errore durante l'upload del file", "alert-danger");
-            return false;
-        }
-        data = await response.json();
-    } catch (e) {
-        showAlertMessageStockService("Errore di rete durante l'import", "alert-danger");
-        return false;
-    }
-
-    const dialogExists = document.getElementById("import-stock-service-results");
-    if (dialogExists) {
-        const tableExists = dialogExists.querySelector("table");
-        if (tableExists) {
-            const rows = Array.isArray(data?.rows) ? data.rows : [];
-            $(tableExists).bootstrapTable("load", rows);
-        }
-        dialogExists.showModal();
-        return;
-    }
-
-    const template = document.getElementById("template-import-stock-service-results");
-    console.log(template);
-
-    const fragment = template.content.cloneNode(true);
-    console.log("cloneNode", fragment);
-
-    const dialog = fragment.querySelector("dialog");
-    console.log("dialog", dialog);
-
-    const table = fragment.querySelector("table");
-    console.log("table", table);
-
-    document.body.appendChild(dialog);
-
-    // Close on ESC (cancel event)
-    dialog.addEventListener("cancel", (e) => {
-        // Allow default close but ensure consistency
-        // If you want to prevent default and handle manually, uncomment next line
-        // e.preventDefault(); dialog.close();
-    });
-
-    // Close on backdrop click
-    dialog.addEventListener("click", (e) => {
-        const rect = dialog.getBoundingClientRect();
-        const inDialog = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
-        if (!inDialog) {
-            dialog.close();
-        }
-    });
-
-    // Remove node on close to avoid duplicates/memory leaks
-    dialog.addEventListener("close", () => {
-        dialog.remove();
-    });
-
-    // Initialize table after dialog is in DOM
-    if (typeof clearImportMessages === "function") clearImportMessages();
-    if (typeof initTableResults === "function") {
-        initTableResults(data.rows);
-    }
-    if (typeof addImportMessage === "function") addImportMessage("success", "Import completato");
-
-    dialog.showModal();
-
-    // Ensure the table scrolls within the modal-body and footer stays visible
-    const modalBody = dialog.querySelector(".modal-body");
-    if (modalBody) {
-        const bodyHeight = modalBody.clientHeight;
-        $("#table-import-stock-service-results").bootstrapTable("resetView", { height: bodyHeight - 16 });
-    }
-}
-
 function bindToolbarBtnActions() {
-    const btnSelectFile = document.getElementById("btnSelectFile");
-    const btnLoadFile = document.getElementById("btnLoadFile");
-    const btnUnloadFile = document.getElementById("btnUnloadFile");
     const btnSaveStockService = document.getElementById("btnSaveStockService");
     const switchStockServiceOn = document.getElementById("switch_stock_service_on");
     const switchStockServiceOff = document.getElementById("switch_stock_service_off");
-    const switchStockServiceForceOn = document.getElementById("switch_stock_service_force_on");
-    const switchStockServiceForceOff = document.getElementById("switch_stock_service_force_off");
-    const fakeFile = document.getElementById("fakeFile");
-    const file = document.getElementById("fileUpload");
 
     btnSaveStockService.addEventListener("click", async (e) => {
         e.preventDefault();
@@ -229,32 +132,6 @@ function bindToolbarBtnActions() {
         $("#table-list-stock-service").bootstrapTable("refresh");
 
         return false;
-    });
-
-    file.addEventListener("change", function () {
-        //Inserisce il nome del file selezionato
-        try {
-            const fileName = this.files[0].name || "";
-            fakeFile.value = fileName;
-        } catch (error) {
-            fakeFile.value = "";
-        }
-    });
-
-    fakeFile.addEventListener("click", function () {
-        file.click();
-    });
-
-    btnSelectFile.addEventListener("click", function () {
-        file.click();
-    });
-
-    btnLoadFile.addEventListener("click", async () => {
-        await showImportResults("load");
-    });
-
-    btnUnloadFile.addEventListener("click", async () => {
-        await showImportResults("unload");
     });
 
     const switchStockServiceAction = async (value) => {
@@ -396,6 +273,7 @@ function initTableStockService() {
             console.log("Bootstrap Table initialized successfully");
             bindButtonsActions();
             bindInputActions();
+            setBootstrapTableIcons();
         },
         columns: [
             {
