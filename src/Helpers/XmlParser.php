@@ -21,6 +21,10 @@
 
 namespace MpSoft\MpStockService\Helpers;
 
+use MpSoft\MpStockService\Controller\AdminSSController;
+use MpSoft\MpStockService\Models\ModelMpStockService;
+use MpSoft\MpStockService\Models\ModelMpStockServiceRow;
+
 /**
  * Classe per il parsing di file XML
  */
@@ -137,29 +141,44 @@ class XmlParser
             $qty = isset($qtyNode[0]) ? (int) ((string) $qtyNode[0]) : 0;
 
             $id_product = 0;
-            $id_product_attribute = $this->getIdProductAttributeByEan13($ean13, $id_product);
+            $product_attribute = AdminSSController::getIdProductAttributeByEan13($ean13, $id_product);
+            if ($product_attribute) {
+                $id_product = (int) $product_attribute['id_product'];
+                $id_product_attribute = (int) $product_attribute['id_product_attribute'];
+            }
 
             if (!$id_product_attribute) {
                 continue;
             }
 
+            $combination = AdminSSController::getCombinationsByProduct($id_product, $id_product_attribute);
+            $stock = ModelMpStockServiceRow::getCurrentStock($id_product, $id_product_attribute);
+            $movement = abs($qty) * $multiplier;
+
             $item = [
                 'id_product' => $id_product,
                 'id_product_attribute' => $id_product_attribute,
-                'ean13' => $ean13,
                 'reference' => $reference,
-                'movement' => abs($qty) * $multiplier,
-                'skipped' => false,
-                'imported' => false,
+                'name' => \Product::getProductName($id_product),
+                'ean13' => $ean13,
+                'product_link' => AdminSSController::getRouterProductLink($id_product),
+                'combination' => $combination,
+                'stock' => $stock,
+                'movement' => $movement,
+                'quantity' => $stock + $movement,
+                'status' => 'pending',
                 'force_update' => $force_update,
             ];
 
             if (!$item['id_product_attribute']) {
-                $item['skipped'] = true;
+                $item['status'] = 'unknown';
             }
 
-            $isStockService = $this->isStockService($id_product);
+            $isStockService = ModelMpStockService::isStockService($id_product);
             $item['is_stock_service'] = $isStockService;
+
+            $imageUrl = AdminSSController::getImageUrl($item['id_product'], $item['id_product_attribute']);
+            $item['image_url'] = $imageUrl;
 
             if ($force_update && !$isStockService) {
                 $result[] = $item;
@@ -174,36 +193,7 @@ class XmlParser
         return $result;
     }
 
-    private function getIdProductAttributeByEan13($ean13, &$id_product)
-    {
-        $id_product = 0;
-        $db = \Db::getInstance();
-        $query = new \DbQuery();
-        $query
-            ->select('id_product, id_product_attribute')
-            ->from('product_attribute')
-            ->where('ean13 = "' . $ean13 . '"');
-        $result = $db->getRow($query);
-        if ($result) {
-            $id_product = $result['id_product'];
-            return $result['id_product_attribute'];
-        }
-
-        return false;
-    }
-
-    private function isStockService($id_product)
-    {
-        $db = \Db::getInstance();
-        $query = new \DbQuery();
-        $query
-            ->select('is_stock_service')
-            ->from('product_stock_service_check')
-            ->where('id_product = ' . (int) $id_product);
-        $result = (int) $db->getValue($query);
-
-        return $result;
-    }
+    private function getCombination($id_product, $id_product_attribute) {}
 
     /**
      * Ottiene il tipo di movimento
@@ -239,5 +229,67 @@ class XmlParser
             'id_supplier' => 0,
             'rows' => $this->extractRowData($movement, $force_update),
         ];
+    }
+
+    public function update(&$parsed)
+    {
+        $id_employee = (int) \Context::getContext()->employee->id;
+        $employee_name = AdminSSController::getEmployeeName(($id_employee));
+
+        foreach ($parsed['rows'] as &$row) {
+            if ($row['status'] == 'unknown') {
+                continue;
+            }
+
+            $id_supplier = AdminSSController::getSupplierId($row['id_product'], $row['id_product_attribute']);
+            $supplier_name = AdminSSController::getSupplierName($id_supplier);
+
+            $row['id_employee'] = $id_employee;
+            $row['employee_name'] = $employee_name;
+            $row['id_supplier'] = $id_supplier;
+            $row['supplier_name'] = $supplier_name;
+
+            if (!$row['id_product']) {
+                continue;
+            }
+
+            if (!$row['is_stock_service'] && !$row['force_update']) {
+                continue;
+            }
+
+            $id = ModelMpStockServiceRow::makeId($row['id_product'], $row['id_product_attribute']);
+            $model = new ModelMpStockServiceRow($row['id_product_attribute'], $row['id_product']);
+
+            $model->id_product_attribute = $row['id_product_attribute'];
+            $model->id_product = $row['id_product'];
+            $model->id_employee = $row['id_employee'];
+            $model->id_supplier = $row['id_supplier'];
+            $model->document_number = $parsed['movement_number'] ?? null;
+            $model->document_date = $parsed['movement_date'] ?? null;
+            $model->quantity = $row['quantity'];
+
+            if (!\Validate::isLoadedObject($model)) {
+                $model->force_id = true;
+                $model->id = $id;
+                $model->date_add = date('Y-m-d H:i:s');
+                $res = $model->add(false, true);
+            } else {
+                $model->date_upd = date('Y-m-d H:i:s');
+                $res = $model->update(true);
+            }
+
+            if ($res) {
+                $row['status'] = 'updated';
+            }
+
+            if ($row['force_update']) {
+                $model = new ModelMpStockService($row['id_product']);
+                if (\Validate::isLoadedObject($model)) {
+                    $model->is_stock_service = true;
+                    $model->id_employee = $id_employee;
+                    $model->update();
+                }
+            }
+        }
     }
 }

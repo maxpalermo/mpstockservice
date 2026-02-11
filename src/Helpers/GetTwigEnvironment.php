@@ -56,6 +56,10 @@ class GetTwigEnvironment
         $moduleTwigPath = "{$basePath}{$moduleName}/views/twig/";
         // Percorso della cartella assets
         $moduleAssetsPath = "{$basePath}{$moduleName}/views/assets/";
+        // Nome file
+        if (!preg_match('/\.html\.twig$/i', $path)) {
+            $path .= '.html.twig';
+        }
 
         // Inizializza il FilesystemLoader e aggiungi un percorso
         // Il primo argomento è il percorso fisico

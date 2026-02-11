@@ -101,7 +101,7 @@ function initTableResults(data) {
         showRefresh: true,
         showColumns: false,
         showExport: false,
-        pageSize: 50,
+        pageSize: 500,
         pageList: [10, 25, 50, 100, 250, 500],
         locale: "it-IT",
         classes: "table table-condensed",
@@ -144,21 +144,11 @@ function initTableResults(data) {
             },
             {
                 field: "quantity_before",
-                title: "Quantità",
+                title: "Magazzino",
                 align: "center",
                 width: 92,
                 sortable: false,
-                formatter: (value, row, index) => {
-                    let color = "success";
-                    if (value < 10) {
-                        color = "danger";
-                    } else if (value < 20) {
-                        color = "warning";
-                    }
-                    return `
-                            <div style="font-size: 1.4rem; border-radius: 50%; padding: 8px;" class="badge badge-${color}" id-value="${value}">${value}</div>
-                        `;
-                },
+                formatter: (value, row, index) => formatterQuantity(value, row, index),
             },
             {
                 field: "movement",
@@ -166,39 +156,19 @@ function initTableResults(data) {
                 align: "center",
                 width: 92,
                 sortable: false,
-                formatter: (value, row, index) => {
-                    let color = "success";
-                    if (value < 0) {
-                        color = "danger";
-                    } else {
-                        color = "success";
-                    }
-                    return `
-                            <div style="font-size: 1.4rem; border-radius: 50%; padding: 8px;" class="badge badge-${color}" id-value="${value}">${value}</div>
-                        `;
-                },
+                formatter: (value, row, index) => formatterQuantity(value, row, index),
             },
             {
                 field: "quantity_after",
-                title: "Quantità",
+                title: "Stock",
                 align: "center",
                 width: 92,
                 sortable: false,
-                formatter: (value, row, index) => {
-                    let color = "success";
-                    if (value < 10) {
-                        color = "danger";
-                    } else if (value < 20) {
-                        color = "warning";
-                    }
-                    return `
-                            <div style="font-size: 1.4rem; border-radius: 50%; padding: 8px;" class="badge badge-${color}" id-value="${value}">${value}</div>
-                        `;
-                },
+                formatter: (value, row, index) => formatterQuantity(value, row, index, true),
             },
             {
                 field: "is_stock_service",
-                title: "Stock",
+                title: "Attivo",
                 align: "center",
                 width: 72,
                 sortable: false,
@@ -221,14 +191,15 @@ function initTableResults(data) {
                 width: 72,
                 sortable: false,
                 formatter: (value, row, index) => {
-                    let color = "text-danger";
-                    let icon = "close";
-                    if (value == true) {
-                        color = "text-success";
-                        icon = "check";
+                    if (value == false) {
+                        return "";
                     }
+
+                    let color = "text-warning";
+                    let icon = "outbound";
+                    let title = "saltato";
                     return `
-                            <div class="material-icons ${color}">${icon}</div>
+                            <div class="material-icons ${color}" title="${title}">${icon}</div>
                         `;
                 },
             },
@@ -239,14 +210,16 @@ function initTableResults(data) {
                 width: 72,
                 sortable: false,
                 formatter: (value, row, index) => {
-                    let color = "text-danger";
-                    let icon = "close";
-                    if (value == true) {
-                        color = "text-success";
-                        icon = "check";
+                    if (value == false) {
+                        return "";
                     }
+
+                    let color = "text-primary";
+                    let icon = "download";
+                    let title = "importato";
+
                     return `
-                            <div class="material-icons ${color}">${icon}</div>
+                            <div class="material-icons ${color}" title="${title}">${icon}</div>
                         `;
                 },
             },

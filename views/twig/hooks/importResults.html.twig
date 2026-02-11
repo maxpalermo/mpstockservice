@@ -1,23 +1,124 @@
-<template id="template-import-stock-service-results">
-    <div id="import-stock-service-results-container">
-        <dialog id="import-stock-service-results">
-            <div class="bootstrap">
-                <div class="modal-header">
-                    <h5 class="modal-title">Risultati importazione Stock Service</h5>
-                    <button type="button" class="close" aria-label="Close" onclick="closeDialog('import-stock-service-results');">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="overflow-y: auto; height: 60vh">
-                    <div id="import-stock-service-results-content">
-                        <div id="import-stock-service-messages" class="mb-3"></div>
-                        <table id="table-import-stock-service-results" data-toggle="table" data-url=""></table>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeDialog('import-stock-service-results');">Chiudi</button>
+<dialog id="dialogTableResult">
+    <style>
+        .pointer {
+            cursor: pointer;
+        }
+
+        #dialogTableResult {
+            overflow: hidden;
+        }
+
+        #dialogTableResult:focus {
+            outline: none;
+        }
+
+        #dialogTableResult .modal-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: #fff;
+        }
+
+        #dialogTableResult .modal-body {
+            overflow: auto; /* va bene anche overflow-y:auto */
+            position: relative;
+            padding: 0;
+        }
+
+        #dialogTableResult #import-stock-service-results-content {
+            padding: 0.75rem;
+        }
+
+        #dialogTableResult table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        #dialogTableResult table thead {
+            background: #303030;
+        }
+        
+        #dialogTableResult table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #303030; /* importante, altrimenti si vede “trasparente” */
+            color: #fcfcfc;
+        }
+    </style>
+    <div class="bootstrap">
+        <div class="modal-header">
+            <div>
+                <h5 class="modal-title">Risultati importazione Stock Service</h5>
+                <div id="DocumentData" class="mb-3">
+                    <h3>Documento {{ parsed.movement_number }} del {{ parsed.movement_date }} (id: {{ parsed.movement_type }})
                 </div>
             </div>
-        </dialog>
+            <button type="button" class="close" aria-label="Close" onclick="document.getElementById('dialogTableResult').close();">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body" style="overflow-y: auto; height: 60vh">
+            <div id="import-stock-service-results-content">
+                <table id="tableResult" class="table table-condensed table-striped">
+                    <thead class="table-dark sticky">
+                        <tr>
+                            <th>IMM</th>
+                            <th>Ean13</th>
+                            <th>Prodotto</th>
+                            <th>Combinazione</th>
+                            <th>Magazzino</th>
+                            <th>Variazione</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in parsed.rows %}
+                            <tr>
+                                <td><img src="{{ row.image_url | raw }}" class="img-thumbnail img-fluid" style="width: 48px; height: 48px; object-fit: contain;"></td>
+                                <td {%if not row.is_stock_service%} style="font-weight: bold; color: #A02020;"{% endif %}>
+                                    <a href="{{ row.product_link }}" target="_blank" class="text-decoration-none">
+                                    {{ row.ean13 }}
+                                    </a>
+                                </td>
+                                <td>{{ row.name }}</td>
+                                <td>{{ row.combination.name }}</td>
+                                {% if not row.is_stock_service %}
+                                    <td class="text-right">--</td>
+                                    <td class="text-right">--</td>
+                                    <td class="text-right">--</td>
+                                {% else %}
+                                    <td class="text-center">
+                                        {{ row.stock }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span style="font-size: 1rem;" class="badge badge{% if row.movement < 0 %}-danger{% else %}-success{% endif %}">
+                                            {{ row.movement }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <strong>{{ row.quantity }}</strong>
+                                    </td>
+                                {% endif %}
+                                <td>
+                                    {%if row.status == 'updated' %}
+                                        <span class="material-icons text-success pointer" title="Prodotto aggiornato">check</span>
+                                    {% else %}
+                                        <span class="material-icons text-danger pointer" {%if not row.is_stock_service%}title="Prodotto non a Stock Service"{% endif %}>error_outline</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if 1==0 %}
+                <pre>{{ parsed|json_encode(constant('JSON_PRETTY_PRINT'))|raw }}</pre>
+                {% endif %}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('dialogTableResult').close();">Chiudi</button>
+        </div>
     </div>
-</template>
+</dialog>

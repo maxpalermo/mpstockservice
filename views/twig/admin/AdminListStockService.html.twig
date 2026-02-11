@@ -57,6 +57,7 @@
 <script src="{{ asset('js/bs-table/bootstrap-table.min.js') }}"></script>
 <script src="{{ asset('js/bs-table/locale/bootstrap-table-it-IT.min.js') }}"></script>
 <script src="{{ asset('js/callback.js') }}"></script>
+<script src="{{ asset('js/formatterQuantity.js') }}"></script>
 <script src="{{ asset('js/adminListStockService.js') }}"></script>
 <script src="{{ asset('js/alertMessage.js') }}"></script>
 <script src="{{ asset('js/importResults.js') }}"></script>
@@ -73,6 +74,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOMContentLoaded');
         const bindStockServiceImportClass = new bindStockServiceImport(adminControllerUrl, "fileUpload", "fakeFile", "switch_force_stock_service", "btnSelectFile", "btnLoadFile", "btnUnloadFile",showImportResults);
+        const adminProductUrl = "{{ adminProductUrl }}";
         initAdminStockServiceTable();
     });    
 </script>

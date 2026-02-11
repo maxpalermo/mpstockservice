@@ -26,11 +26,10 @@ require_once _PS_MODULE_DIR_ . 'mpstockservice/vendor/autoload.php';
 
 use Doctrine\DBAL\Query\QueryBuilder;
 use MpSoft\MpStockService\Helpers\GetTwigEnvironment;
-use MpSoft\MpStockService\Helpers\ProductUtils;
 use MpSoft\MpStockService\Install\InstallMenu;
 use MpSoft\MpStockService\Models\ModelMpStockService;
-use MpSoft\MpStockService\Models\ModelMpStockServiceCheck;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ToggleColumn;
+use MpSoft\MpStockService\Models\ModelMpStockServiceRow;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\HtmlColumn;
 use PrestaShop\PrestaShop\Core\Grid\Definition\GridDefinitionInterface;
 use PrestaShop\PrestaShop\Core\Grid\Filter\Filter;
 use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
@@ -49,7 +48,7 @@ class MpStockService extends Module implements WidgetInterface
     {
         $this->name = 'mpstockservice';
         $this->tab = 'administration';
-        $this->version = '1.3.1';
+        $this->version = '1.4.69';
         $this->author = 'Massimiliano Palermo';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '8.0', 'max' => _PS_VERSION_];
@@ -90,7 +89,7 @@ class MpStockService extends Module implements WidgetInterface
                 'displayProductExtraContent',
             ]) &&
             ModelMpStockService::install() &&
-            ModelMpStockServiceCheck::install() &&
+            ModelMpStockServiceRow::install() &&
             $menuInstaller->installMenu(
                 $this->adminClassName,
                 $this->l('Admin Stock Service'),
@@ -127,8 +126,8 @@ class MpStockService extends Module implements WidgetInterface
                     'suppliers' => json_encode(Supplier::getSuppliers()),
                     'controller' => $controller,
                     'adminControllerUrl' => $this->context->link->getAdminLink('AdminMpStockService'),
-                    'isStockService' => (int) ModelMpStockServiceCheck::isStockService($id_product),
-                    'combinations' => json_encode(ModelMpStockService::getStockServiceByProduct($id_product)),
+                    'isStockService' => (int) ModelMpStockService::isStockService($id_product),
+                    'combinations' => json_encode(ModelMpStockServiceRow::getStockServiceProductList($id_product)),
                 ];
                 return $template->render($variables);
 
@@ -148,21 +147,6 @@ class MpStockService extends Module implements WidgetInterface
         }
     }
 
-    public function hook_DisplayAdminProductsExtra($params)
-    {
-        $id_product = (int) $params['id_product'];
-        $productUtils = new ProductUtils($this);
-        $controller = new MpSoft\MpStockService\Hooks\MpStockServiceHookController($this);
-        $product = new Product($id_product, false, $this->id_lang);
-        if (Validate::isLoadedObject($product)) {
-            $combinations = $productUtils->getCombinations($product);
-            $controller->setCombinations($combinations);
-            $controller->toggleStockService($combinations[0]['is_stock_service'] ?? 0);
-        }
-
-        return $controller->display(false);
-    }
-
     public function hookDisplayProductExtraContent($params)
     {
         // Nothing
@@ -178,13 +162,11 @@ class MpStockService extends Module implements WidgetInterface
             ->getColumns()
             ->addAfter(
                 'quantity',
-                (new ToggleColumn('is_stock_service'))
+                (new HtmlColumn('is_stock_service'))
                     ->setName($this->trans('Stock Service', [], 'Modules.Mpstockservice.Admin'))
                     ->setOptions([
                         'field' => 'is_stock_service',
-                        'primary_field' => 'id_product',
-                        'route' => 'mpstockservice_toggle_is_stock_service',
-                        'route_param_name' => 'id_product',
+                        'clickable' => false,
                     ])
             );
 
@@ -205,24 +187,38 @@ class MpStockService extends Module implements WidgetInterface
         $searchCriteria = $params['search_criteria'];
 
         // Aggiungi la colonna is_stock_service alla query
-        $StockServiceTable = _DB_PREFIX_ . ModelMpStockServiceCheck::$definition['table'];
-        $queryBuilder->addSelect('COALESCE(ss.is_stock_service, 0) as is_stock_service');
-        $queryBuilder->leftJoin('p', $StockServiceTable, 'ss', 'p.id_product = ss.id_product');
+        $StockServiceTable = _DB_PREFIX_ . ModelMpStockService::$definition['table'];
+        $stockServiceAlias = 'mpssc';
+        $queryBuilder->addSelect(sprintf('COALESCE(%s.is_stock_service, 0) as is_stock_service_flag', $stockServiceAlias));
+        $queryBuilder->addSelect(sprintf(
+            'CASE WHEN COALESCE(%s.is_stock_service, 0) = 1 THEN \'<span class="badge badge-success">SI</span>\' ELSE \'<span class="badge badge-danger">NO</span>\' END as is_stock_service',
+            $stockServiceAlias
+        ));
+        $queryBuilder->leftJoin('p', $StockServiceTable, $stockServiceAlias, sprintf('p.id_product = %s.id_product', $stockServiceAlias));
 
         // Gestisci il filtro per is_stock_service
         foreach ($searchCriteria->getFilters() as $filterName => $filterValue) {
             if ($filterName == 'is_stock_service' && $filterValue !== '') {
-                $queryBuilder->andWhere('COALESCE(ss.is_stock_service, 0) = :is_stock_service');
+                $queryBuilder->andWhere(sprintf('COALESCE(%s.is_stock_service, 0) = :is_stock_service', $stockServiceAlias));
                 $queryBuilder->setParameter('is_stock_service', $filterValue);
 
                 // Modifica anche la query di conteggio
                 $countQueryBuilder = $params['count_query_builder'] ?? null;
                 // Applica lo stesso filtro alla query di conteggio
                 if ($countQueryBuilder !== null) {
-                    $countQueryBuilder->andWhere('COALESCE(ss.is_stock_service, 0) = :is_stock_service');
+                    $countQueryBuilder->leftJoin('p', $StockServiceTable, $stockServiceAlias, sprintf('p.id_product = %s.id_product', $stockServiceAlias));
+                    $countQueryBuilder->andWhere(sprintf('COALESCE(%s.is_stock_service, 0) = :is_stock_service', $stockServiceAlias));
                     $countQueryBuilder->setParameter('is_stock_service', $filterValue);
                 }
             }
         }
+    }
+
+    public function getProductEditLink($idProduct)
+    {
+        return $this->context->link->getAdminLink('AdminProducts', true, [
+            'id_product' => $idProduct,
+            'updateproduct' => 1
+        ]);
     }
 }

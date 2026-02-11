@@ -21,7 +21,7 @@
 
 namespace MpSoft\MpStockService\Helpers;
 
-class RegexpHelper
+class RegExpHelper
 {
     public static function startsWith($haystack, $needle)
     {

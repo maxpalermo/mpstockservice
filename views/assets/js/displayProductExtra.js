@@ -154,6 +154,8 @@ function bindToolbarBtnActions() {
         } else {
             showAlertMessageStockService(data.message, "alert-danger");
         }
+
+        $("#table-list-stock-service").bootstrapTable("refresh");
     };
 
     switchStockServiceOn.addEventListener("click", async () => {
@@ -181,35 +183,7 @@ function bindButtonsActions() {
 }
 
 function bindInputActions() {
-    const inputsQty = document.querySelectorAll('input[name^="variation"][type="number"]');
-    inputsQty.forEach((input) => {
-        input.addEventListener("input", function () {
-            const idProductAttribute = this.getAttribute("data-id_product_attribute");
-            const idProduct = this.getAttribute("data-id_product");
-            const badge = this.closest("tr").querySelector(".badge");
-            const badgeValue = Number(badge.getAttribute("id-value"));
-            const variation = Number(this.value);
-
-            const result = badgeValue + variation;
-            if (result < 0) {
-                result = 0;
-            }
-
-            switch (true) {
-                case result < 10:
-                    badge.setAttribute("class", "badge badge-danger");
-                    break;
-                case result < 20:
-                    badge.setAttribute("class", "badge badge-warning");
-                    break;
-                case result >= 20:
-                    badge.setAttribute("class", "badge badge-success");
-                    break;
-            }
-
-            badge.textContent = result;
-        });
-    });
+    //Nothing to do
 }
 
 function getStockServiceData() {
@@ -219,9 +193,9 @@ function getStockServiceData() {
     rows.forEach((row) => {
         const idProduct = row.querySelector('input[name^="variation"]').getAttribute("data-id_product");
         const idProductAttribute = row.querySelector('input[name^="variation"]').getAttribute("data-id_product_attribute");
-        const quantity_before = Number(row.querySelector('div[name^="quantity"]').getAttribute("id-value"));
+        const quantity_before = Number(row.querySelector("div.quantity").getAttribute("data-value"));
         const variation = Number(row.querySelector('input[name^="variation"]').value);
-        const quantity_after = Number(row.querySelector('div[name^="quantity"]').textContent);
+        const quantity_after = quantity_before + variation;
         //const id_supplier = Number(row.querySelector('input[name^="id_supplier"]').value);
         const number = row.querySelector('input[name^="document_number"]').value;
         const date = row.querySelector('input[name^="document_date"]').value;
@@ -266,7 +240,7 @@ function initTableStockService() {
         pageList: [10, 25, 50, 100, 250, 500],
         locale: "it-IT",
         classes: "table table-bordered table-hover",
-        theadClasses: "thead-light",
+        theadClasses: "thead-dark",
         toolbar: "#table-toolbar",
         uniqueId: "id_product_attribute",
         onPostBody: function () {
@@ -283,22 +257,18 @@ function initTableStockService() {
                 sortable: false,
             },
             {
+                field: "ean13",
+                title: "EAN13",
+                align: "center",
+                sortable: false,
+            },
+            {
                 field: "quantity",
                 title: "Quantità",
                 align: "center",
                 width: 110,
                 sortable: false,
-                formatter: (value, row, index) => {
-                    let color = "success";
-                    if (value < 10) {
-                        color = "danger";
-                    } else if (value < 20) {
-                        color = "warning";
-                    }
-                    return `
-                            <div name="quantity[${row.id_product_attribute}]" style="font-size: 1.4rem; border-radius: 50%; padding: 8px;" class="badge badge-${color}" id-value="${value}">${value}</div>
-                        `;
-                },
+                formatter: (value, row, index) => formatterQuantity(value, row, index),
             },
             {
                 field: "variation",

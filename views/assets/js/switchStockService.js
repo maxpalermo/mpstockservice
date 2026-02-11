@@ -44,6 +44,7 @@ class switchStockService {
 
         if (data.success) {
             showAlertMessageStockService(data.message, "alert-success");
+            $("#table-list-stock-service").bootstrapTable("refresh");
         } else {
             showAlertMessageStockService(data.message, "alert-danger");
         }

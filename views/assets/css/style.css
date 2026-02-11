@@ -18,7 +18,8 @@
     gap: 2rem;
 }
 
-.grow-1 {
+.grow-1,
+.d-grow {
     flex-grow: 1 !important;
 }
 

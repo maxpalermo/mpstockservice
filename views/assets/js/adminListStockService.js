@@ -30,6 +30,60 @@ function bindActionButtons() {
     });
 }
 
+async function bindToggleStockServiceIcons() {
+    const btnToggleStockService = document.querySelectorAll(".btn-toggle-stock-service");
+
+    if (btnToggleStockService) {
+        btnToggleStockService.forEach((btn) => {
+            btn.addEventListener("click", async function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const idProduct = this.dataset.id;
+                const formData = new FormData();
+                formData.append("ajax", 1);
+                formData.append("action", "toggleStockService");
+                formData.append("id_product", idProduct);
+
+                try {
+                    const response = await fetch(adminControllerUrl, {
+                        method: "POST",
+                        body: formData,
+                    });
+
+                    const data = await response.json();
+                    const i = btn;
+                    console.log("ICON", i);
+
+                    if (data.success) {
+                        if (data.status == "enabled" && i) {
+                            i.style.color = "#72c279";
+                            i.textContent = "check";
+                        } else {
+                            i.style.color = "#ff4444";
+                            i.textContent = "close";
+                            const quantity = btn.closest("tr").querySelector(".quantity").closest("td");
+                            quantity.innerHTML = `
+                                <div style="
+                                    font-size: 1.0rem;
+                                    border: none;
+                                    padding: 4px;
+                                    border: none;
+                                    border-bottom: 4px solid #ffbb33;
+                                " class="quantity" data-value="0">0</div>
+                            `;
+                        }
+                    } else {
+                        console.error("Errore lettura dati di risposta stock service:", data);
+                    }
+                } catch (error) {
+                    console.error("Errore abilitazione/disabilitazione stock service:", error);
+                }
+            });
+        });
+    }
+}
+
 function initAdminStockServiceTable() {
     $("#table-list-stock-service").bootstrapTable({
         url: adminControllerUrl,
@@ -54,7 +108,7 @@ function initAdminStockServiceTable() {
         search: true,
         showRefresh: true,
         showColumns: false,
-        pageSize: 25,
+        pageSize: 50,
         pageList: [10, 25, 50, 100, 250, 500],
         locale: "it-IT",
         classes: "table table-bordered table-hover",
@@ -94,6 +148,8 @@ function initAdminStockServiceTable() {
             console.log("Bootstrap Table initialized successfully");
             bindActionButtons();
             setBootstrapTableIcons();
+            bindToggleStockServiceIcons();
+
             new bindEnableDisableStockServiceList(adminControllerUrl);
 
             // Normalizza il markup del dropdown page-size a Bootstrap 3
@@ -182,17 +238,7 @@ function initAdminStockServiceTable() {
                 title: "Quantità",
                 align: "center",
                 sortable: true,
-                formatter: function (value, row, index) {
-                    if (row.is_stock_service == 0) {
-                        return `<span class="badge badge-danger" style="font-family:'monospace';font-size: 1.0rem;">${row.quantity}</span>`;
-                    } else {
-                        if (row.quantity > 0) {
-                            return `<span class="badge badge-success" style="font-family:'monospace';font-size: 1.0rem;">${row.quantity}</span>`;
-                        } else {
-                            return `<span class="badge badge-warning" style="font-family:'monospace';font-size: 1.0rem;">${row.quantity}</span>`;
-                        }
-                    }
-                },
+                formatter: (value, row, index) => formatterQuantity(value, row, index),
             },
             {
                 field: "is_stock_service",
@@ -200,32 +246,19 @@ function initAdminStockServiceTable() {
                 align: "center",
                 sortable: true,
                 formatter: function (value, row, index) {
-                    console.log(row.id_product, row.is_stock_service);
-                    return row.is_stock_service == 1 ? `<span class="material-icons text-success" style="font-size: 1.5rem;">check</span>` : `<span class="material-icons text-danger" style="font-size: 1.5rem;">close</span>`;
-                },
-            },
-            {
-                field: "action",
-                title: "Azioni",
-                align: "center",
-                width: 50,
-                sortable: false,
-                formatter: function (value, row, index) {
-                    if (row.is_stock_service == 1) {
-                        return `
-                                <div class="d-flex justify-content-center align-items-center gap-2">
-                                    <button type="button" class="btn btn-danger btn-sm" name="btn-disable-stock-service" title="Disabilita" data-id="${row.id_product}">
-                                        <span class="material-icons">close</span>
-                                    </button>
-                                </div>`;
-                    } else {
-                        return `
-                                <div class="d-flex justify-content-center align-items-center gap-2">
-                                    <button type="button" class="btn btn-success btn-sm" name="btn-enable-stock-service" title="Abilita" data-id="${row.id_product}">
-                                        <span class="material-icons">check</span>
-                                    </button>
-                                </div>`;
-                    }
+                    const icons = {
+                        true: "check",
+                        false: "close",
+                    };
+                    const colors = {
+                        true: "#72c279",
+                        false: "#ff4444",
+                    };
+
+                    const iconColor = value == 0 ? colors.false : colors.true;
+                    const iconType = value == 0 ? icons.false : icons.true;
+
+                    return `<span class="material-icons btn-toggle-stock-service" data-id="${row.id_product}" style="font-size: 1.5rem; font-weight: bold; color: ${iconColor}">${iconType}</span>`;
                 },
             },
         ],
