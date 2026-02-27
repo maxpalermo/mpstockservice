@@ -86,7 +86,6 @@ class MpStockService extends Module implements WidgetInterface
                 'actionProductGridDefinitionModifier',
                 'actionProductGridQueryBuilderModifier',
                 'displayAdminProductsExtra',
-                'displayProductExtraContent',
             ]) &&
             ModelMpStockService::install() &&
             ModelMpStockServiceRow::install() &&
@@ -117,23 +116,29 @@ class MpStockService extends Module implements WidgetInterface
             case 'actionAdminControllerSetMedia':
                 break;
             case 'displayAdminProductsExtra':
-                $controller = Tools::getValue('controller');
-                $twig = new GetTwigEnvironment($this->name);
-                $template = $twig->load('@ModuleTwig/hooks/displayProductExtra.html.twig');
-                $id_product = (int) $configuration['id_product'];
-                $variables = [
-                    'id_product' => $id_product,
-                    'suppliers' => json_encode(Supplier::getSuppliers()),
-                    'controller' => $controller,
-                    'adminControllerUrl' => $this->context->link->getAdminLink('AdminMpStockService'),
-                    'isStockService' => (int) ModelMpStockService::isStockService($id_product),
-                    'combinations' => json_encode(ModelMpStockServiceRow::getStockServiceProductList($id_product)),
-                ];
-                return $template->render($variables);
-
+                return $this->displayAdminProductExtra($configuration);
+            case 'displayProductExtraContent':
+                break;
             default:
                 return '';
         }
+    }
+
+    protected function displayAdminProductExtra($configuration)
+    {
+        $controller = Tools::getValue('controller');
+        $twig = new GetTwigEnvironment($this->name);
+        $template = $twig->load('@ModuleTwig/hooks/displayProductExtra.html.twig');
+        $id_product = (int) $configuration['id_product'];
+        $variables = [
+            'id_product' => $id_product,
+            'suppliers' => json_encode(Supplier::getSuppliers()),
+            'controller' => $controller,
+            'adminControllerUrl' => $this->context->link->getAdminLink('AdminMpStockService'),
+            'isStockService' => (int) ModelMpStockService::isStockService($id_product),
+            'combinations' => json_encode(ModelMpStockServiceRow::getStockServiceProductList($id_product)),
+        ];
+        return $template->render($variables);
     }
 
     public function hookActionAdminControllerSetMedia($params)
@@ -145,11 +150,6 @@ class MpStockService extends Module implements WidgetInterface
                 $cssPath . '/icons.css',
             ], 'all', 9999);
         }
-    }
-
-    public function hookDisplayProductExtraContent($params)
-    {
-        // Nothing
     }
 
     public function hookActionProductGridDefinitionModifier(array $params)

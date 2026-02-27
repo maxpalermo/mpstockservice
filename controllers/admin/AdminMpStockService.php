@@ -165,7 +165,7 @@ class AdminMpStockServiceController extends ModuleAdminController
         $this->toolbar_title = $this->module->l('Stock Services Products', $this->controller_name);
 
         $this->page_header_toolbar_btn['import'] = [
-            'href' => 'javascript:showImportPanel();',
+            'href' => 'javascript:toggleMpStockServiceDialog();',
             'desc' => $this->module->l('Importa', $this->controller_name),
             'imgclass' => 'import',
         ];
@@ -224,6 +224,47 @@ class AdminMpStockServiceController extends ModuleAdminController
         return [
             'success' => true,
             'message' => $this->module->l('Stock service salvato', $this->controller_name),
+        ];
+    }
+
+    public function ajaxProcessSaveEan13()
+    {
+        $id_product_attribute = (int) Tools::getValue('id_product_attribute');
+        $ean13 = pSQL(Tools::getValue('ean13'));
+
+        if (!$id_product_attribute) {
+            return [
+                'result' => false,
+                'message' => 'Id prodotto non valido.'
+            ];
+        }
+
+        if (!Validate::isEan13($ean13)) {
+            return [
+                'result' => false,
+                'message' => "{$ean13} non è un EAN13 valido."
+            ];
+        }
+
+        $db = Db::getInstance();
+        $res = $db->update(
+            'product_attribute',
+            [
+                'ean13' => $ean13,
+            ],
+            'id_product_attribute = ' . $id_product_attribute
+        );
+
+        if ($res) {
+            return [
+                'result' => true,
+                'message' => "{$ean13} salvato con successo."
+            ];
+        }
+
+        return [
+            'result' => false,
+            'message' => "{$ean13} non salvato."
         ];
     }
 

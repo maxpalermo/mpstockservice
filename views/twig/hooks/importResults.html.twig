@@ -51,7 +51,9 @@
             <div>
                 <h5 class="modal-title">Risultati importazione Stock Service</h5>
                 <div id="DocumentData" class="mb-3">
-                    <h3>Documento {{ parsed.movement_number }} del {{ parsed.movement_date }} (id: {{ parsed.movement_type }})
+                    <h3>
+                        <span>Documento {{ parsed.movement_number }} del {{ parsed.movement_date }}</span>
+                        <span> (id mov: {{ parsed.movement_type }})</span>
                 </div>
             </div>
             <button type="button" class="close" aria-label="Close" onclick="document.getElementById('dialogTableResult').close();">
@@ -64,6 +66,7 @@
                     <thead class="table-dark sticky">
                         <tr>
                             <th>IMM</th>
+                            <th>Riferimento</th>
                             <th>Ean13</th>
                             <th>Prodotto</th>
                             <th>Combinazione</th>
@@ -77,9 +80,10 @@
                         {% for row in parsed.rows %}
                             <tr>
                                 <td><img src="{{ row.image_url | raw }}" class="img-thumbnail img-fluid" style="width: 48px; height: 48px; object-fit: contain;"></td>
-                                <td {%if not row.is_stock_service%} style="font-weight: bold; color: #A02020;"{% endif %}>
+                                <td>{{ row.reference }}</td>
+                                <td>
                                     <a href="{{ row.product_link }}" target="_blank" class="text-decoration-none">
-                                    {{ row.ean13 }}
+                                    <span {%if not row.is_stock_service%} style="font-weight: bold; color: #A02020;"{% endif %}>{{ row.ean13 }}</span>
                                     </a>
                                 </td>
                                 <td>{{ row.name }}</td>
@@ -90,7 +94,14 @@
                                     <td class="text-right">--</td>
                                 {% else %}
                                     <td class="text-center">
-                                        {{ row.stock }}
+                                        {% if row.stock < 0 %}
+                                            <strong>--</strong>
+                                        {% elseif row.stock == 0 %}
+                                            <span class="badge badge-info">{{ row.stock }}<strong>
+                                        {% else %}
+                                            <strong>{{ row.stock }}</strong>
+                                        {% endif %}
+                                        
                                     </td>
                                     <td class="text-center">
                                         <span style="font-size: 1rem;" class="badge badge{% if row.movement < 0 %}-danger{% else %}-success{% endif %}">
@@ -98,7 +109,13 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <strong>{{ row.quantity }}</strong>
+                                        {% if row.quantity < 0 %}
+                                            <span class="badge badge-info">0<strong>
+                                        {%elseif row.quantity == 0 %}
+                                            <span class="badge badge-warning">0<strong>
+                                        {% else %}
+                                            <strong>{{ row.quantity }}</strong>
+                                        {% endif %}
                                     </td>
                                 {% endif %}
                                 <td>

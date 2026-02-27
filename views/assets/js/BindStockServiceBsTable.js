@@ -72,6 +72,7 @@ class BindStockServiceBsTable {
             onPostBody: function () {
                 self.setBootstrapTableIcons();
                 self.fixDropDownPagination();
+                self.showHideTable();
             },
             columns: [
                 {
@@ -85,6 +86,8 @@ class BindStockServiceBsTable {
                     title: "EAN13",
                     align: "center",
                     sortable: false,
+                    width: "20rem",
+                    formatter: (value, row, index) => formatterEan13(value, row, index),
                 },
                 {
                     field: "quantity",
@@ -216,5 +219,14 @@ class BindStockServiceBsTable {
             i.setAttribute("class", "material-icons");
             i.innerHTML = "clear";
         });
+    }
+
+    showHideTable() {
+        const switchValue = document.querySelector("input[name=switchStockServiceOnOff]:checked").value;
+        if (switchValue == 0) {
+            $("#table-list-stock-service").hide(); // Nasconde la tabella
+        } else {
+            $("#table-list-stock-service").show(); // Mostra la tabella
+        }
     }
 }

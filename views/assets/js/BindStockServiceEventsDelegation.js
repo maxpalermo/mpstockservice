@@ -57,28 +57,34 @@ class BindStockServiceEventsDelegation {
                 return;
             }
 
-            const clicked = el.closest("#mpstockserviceFakeFile, #mpstockserviceBtnSelectFile, #mpstockserviceBtnLoadFile, #mpstockserviceBtnUnloadFile, #mpstockserviceBtnSaveStockService");
-            if (clicked) {
-                if (clicked.id === "mpstockserviceFakeFile") {
-                    self.file?.click();
-                } else if (clicked.id === "mpstockserviceBtnSelectFile") {
-                    self.file?.click();
-                } else if (clicked.id === "mpstockserviceBtnLoadFile") {
-                    showNoticeMessage("Caricamento dei movimenti in corso...");
-                    await self.parseFile("load");
-                } else if (clicked.id === "mpstockserviceBtnUnloadFile") {
-                    showNoticeMessage("Scaricamento dei movimenti in corso...");
-                    await self.parseFile("unload");
-                } else if (clicked.id === "mpstockserviceBtnSaveStockService") {
-                    if (confirm("Aggiornare lo stock service?") == false) {
-                        return;
-                    }
-                    const status = await self.update();
-                    if (status == 1) {
-                        showSuccessMessage("Operazione eseguita.");
-                    }
-                    self.refresh();
+            mpStockServiceBindFileInput(el, self.endpoint);
+
+            if (el.id === "mpstockserviceBtnSaveStockService") {
+                if (confirm("Aggiornare lo stock service?") == false) {
+                    return;
                 }
+                const status = await self.update();
+                if (status == 1) {
+                    showSuccessMessage("Operazione eseguita.");
+                }
+                self.refresh();
+            }
+
+            const btnEan13 = el.closest("[name=btnSaveEan13]");
+            if (btnEan13) {
+                if (!confirm("Modificare il codice EAN13?")) {
+                    return;
+                }
+                const value = btnEan13.closest("div.input-group").querySelector("input").value;
+                const id = btnEan13.dataset.id;
+                const data = await fetchCall(self.endpoint, "saveEan13", { ean13: value, id_product_attribute: id });
+                if (data.result == true) {
+                    showSuccessMessage(data.message);
+                } else {
+                    showErrorMessage(data.message);
+                }
+                self.refresh();
+
                 return;
             }
 
@@ -89,6 +95,7 @@ class BindStockServiceEventsDelegation {
 
             if (input.name === "switchStockServiceOnOff") {
                 if (!confirm("Modificare lo Stock Service?")) {
+                    e.preventDefault();
                     return;
                 }
                 const value = input.value;
@@ -99,6 +106,8 @@ class BindStockServiceEventsDelegation {
                     showErrorMessage("Stock service non aggiornato");
                 }
                 self.refresh();
+
+                showHideTable();
 
                 return;
             }
@@ -189,40 +198,6 @@ class BindStockServiceEventsDelegation {
         });
     }
 
-    async parseFile(type) {
-        const self = this;
-        const formData = new FormData();
-        formData.append("ajax", 1);
-        formData.append("action", "parseFile");
-        formData.append("type", type);
-        const file = self.file?.files?.[0] ?? null;
-        if (!file) {
-            showErrorMessage("Seleziona prima un file XML");
-            return;
-        }
-
-        formData.append("file", file);
-
-        const response = await fetch(self.endpoint, {
-            method: "POST",
-            body: formData,
-        });
-
-        if (!response.ok) {
-            showErrorMessage("Errore durante l'elaborazione del file");
-            return;
-        }
-
-        const data = await response.json();
-        console.log(data);
-
-        if ("table" in data) {
-            self.showTableResult(data.table);
-        }
-
-        showNoticeMessage("File elaborato con successo");
-    }
-
     async update() {
         const self = this;
         const rows = [];
@@ -249,7 +224,7 @@ class BindStockServiceEventsDelegation {
                         row.name = td.textContent.trim();
                         break;
                     case 1:
-                        row.ean13 = td.textContent.trim();
+                        row.ean13 = td.querySelector("input")?.value.trim() || "";
                         break;
                     case 2:
                         row.quantity = Number(td.querySelector("div").textContent.trim());
@@ -282,20 +257,5 @@ class BindStockServiceEventsDelegation {
 
     refresh() {
         $(this.table).bootstrapTable("refresh");
-    }
-
-    showTableResult(tableHTML) {
-        const template = document.createElement("template");
-        template.innerHTML = tableHTML;
-
-        const dialog = template.content.cloneNode(true).querySelector("dialog");
-
-        if (document.getElementById("dialogTableResult")) {
-            document.getElementById("dialogTableResult").remove();
-        }
-
-        document.body.appendChild(dialog);
-
-        dialog.showModal();
     }
 }

@@ -25,6 +25,10 @@
         flex-grow: 1;
     }
 
+    .d-grow {
+        flex-grow: 1;
+    }
+
     .mb-4 {
         margin-bottom: 2rem;
     }
@@ -32,9 +36,11 @@
 </style>
 
 <div class="bootstrap container">
-    <section class="import-panel">
-        {% include 'admin/importPanel.html.twig' %}
-    </section>
+    <dialog id="import-panel" style="width: 60rem; height: 8rem; padding: 16px;">
+        <div class="d-flex justify-content-center align-items-center" id="import-panel-container">
+
+        </div>
+    </dialog>
 
     <section class="table-list">
         <div class="panel">
@@ -54,27 +60,45 @@
 
 {% include 'hooks/importResults.html.twig' %}
 
+<script src="{{ asset('js/formatterQuantity.js') }}"></script>
 <script src="{{ asset('js/bs-table/bootstrap-table.min.js') }}"></script>
 <script src="{{ asset('js/bs-table/locale/bootstrap-table-it-IT.min.js') }}"></script>
+<script src="{{ asset('js/BsTableInit.js') }}"></script>
+<script src="{{ asset('js/MoveGrowlContainer.js') }}"></script>
+<script src="{{ asset('js/RenderFileInputRequester.js') }}"></script>
+<script src="{{ asset('js/BindStockServiceEventsDelegation.js') }}"></script>
+<script src="{{ asset('js/bindEnableDisableStockServiceList.js') }}"></script>
+<script src="{{ asset('js/importResults.js') }}"></script>
+
+
+<!--
+<script src="{{ asset('js/parseFile.js') }}"></script>
 <script src="{{ asset('js/callback.js') }}"></script>
-<script src="{{ asset('js/formatterQuantity.js') }}"></script>
 <script src="{{ asset('js/adminListStockService.js') }}"></script>
 <script src="{{ asset('js/alertMessage.js') }}"></script>
-<script src="{{ asset('js/importResults.js') }}"></script>
 <script src="{{ asset('js/setBootstraptableIcons.js') }}"></script>
-<script src="{{ asset('js/bindEnableDisableStockServiceList.js') }}"></script>
-<script src="{{ asset('js/bindStockServiceImport.js') }}"></script>
+<script src="{{ asset('js/bindStockServiceImport.js') }}"></script> 
+-->
 
 
 <script type="text/javascript">
     const adminControllerUrl = '{{ adminControllerUrl | raw }}';
-    const parentAlertContainer = document.getElementById('alert-message-container');
-    const alertMessage = new alertMessageStockService(parentAlertContainer);
+
+    let adminProductUrl;
+    let importPanelContainer;
 
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOMContentLoaded');
-        const bindStockServiceImportClass = new bindStockServiceImport(adminControllerUrl, "fileUpload", "fakeFile", "switch_force_stock_service", "btnSelectFile", "btnLoadFile", "btnUnloadFile",showImportResults);
-        const adminProductUrl = "{{ adminProductUrl }}";
+        console.log('DOMContentLoaded: AdminListStockService.js');
+        adminProductUrl = "{{ adminProductUrl }}";
+        importPanelContainer = document.getElementById("import-panel").querySelector("#import-panel-container");
+        //Init Table
         initAdminStockServiceTable();
+        
+        //Render File selector
+        const formImport = mpStockServiceRenderFileInput(true);
+        importPanelContainer.append(formImport);
+
+        //Bind Actions
+        bindRenderFileInputActions(adminControllerUrl);
     });    
 </script>
